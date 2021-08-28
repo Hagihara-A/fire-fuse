@@ -4,7 +4,8 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "test": "echo 1"
+    "test": "jest",
+    "build": "tsc"
   },
   "author": "",
   "devDependencies": {
