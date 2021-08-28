@@ -20,5 +20,8 @@
   "types": "./build/index.d.ts",
   "dependencies": {
     "firebase": "^9.0.0"
-  }
+  },
+  "files": [
+    "build/**/*"
+  ]
 }
