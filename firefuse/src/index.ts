@@ -1,12 +1,11 @@
 import * as firestore from "firebase/firestore";
-import { DocumentReference, Timestamp } from "firebase/firestore";
 
 type FieldType =
   | string
   | number
   | boolean
   | null
-  | Timestamp
+  | firestore.Timestamp
   | FieldType[]
   | DocumentData;
 
@@ -103,6 +102,6 @@ export type DeepPartial<T extends DocumentData> = {
   [K in keyof T]?: T[K] extends DocumentData ? DeepPartial<T[K]> : T[K];
 };
 export const updateDoc = <T extends DocumentData>(
-  doc: DocumentReference<T>,
+  doc: firestore.DocumentReference<T>,
   data: UpdateData<T> | DeepPartial<T>
 ) => firestore.updateDoc(doc, data as any);
