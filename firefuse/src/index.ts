@@ -85,10 +85,15 @@ export type Join<T extends string[]> = T extends [infer H]
 export type UpdateKeys<T extends DocumentData> = Join<
   DeepKeys<T> extends string[] ? DeepKeys<T> : never
 >;
-export type UpdateData<T extends DocumentData> = {
-  [K in UpdateKeys<T>]?: K extends `${infer H}.${string}`
+export type UpdateData<
+  T extends DocumentData,
+  U extends UpdateKeys<T> = UpdateKeys<T>
+> = {
+  [K in U]?: K extends `${infer H}.${infer Rest}`
     ? T[H] extends DocumentData
-      ? UpdateData<T[H]>
+      ? Rest extends UpdateKeys<T[H]>
+        ? UpdateData<T[H], Rest>[Rest]
+        : never
       : never
     : K extends keyof T
     ? T[K]
@@ -97,9 +102,7 @@ export type UpdateData<T extends DocumentData> = {
 export type DeepPartial<T extends DocumentData> = {
   [K in keyof T]?: T[K] extends DocumentData ? DeepPartial<T[K]> : T[K];
 };
-export const updateDoc = <
-  T extends DocumentData
->(
+export const updateDoc = <T extends DocumentData>(
   doc: DocumentReference<T>,
   data: UpdateData<T> | DeepPartial<T>
 ) => firestore.updateDoc(doc, data as any);
