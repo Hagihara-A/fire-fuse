@@ -1,6 +1,6 @@
 import * as firestore from "firebase/firestore";
 
-type FieldType =
+export type FieldType =
   | string
   | number
   | boolean
@@ -9,7 +9,7 @@ type FieldType =
   | FieldType[]
   | DocumentData;
 
-type DocumentData = {
+export type DocumentData = {
   [K: string]: FieldType;
 };
 
@@ -169,8 +169,14 @@ export const where = <T extends DocumentData>() => {
   ) => firestore.where(field, op, value);
 };
 
+export type KeyofPrimitive<
+  T extends DocumentData,
+  K extends keyof T = keyof T
+> = {
+  [L in K]: T[L] extends any[] | DocumentData ? never : L;
+}[K];
 export const orderBy = <T extends DocumentData>() => {
-  return <F extends string & keyof T>(
+  return <F extends KeyofPrimitive<T> & string>(
     field: F,
     order?: firestore.OrderByDirection
   ) => (order ? firestore.orderBy(field, order) : firestore.orderBy(field));
