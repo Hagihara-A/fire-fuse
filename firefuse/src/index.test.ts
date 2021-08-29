@@ -166,65 +166,69 @@ describe("read data once", () => {
     const docSnap = await fs.getDoc(docRef);
     expect(docSnap.exists()).toBeTruthy();
   });
+  describe("where", () => {
+    test("get cities where(capital, ==, true)", async () => {
+      const where = fuse.where<City>();
+      const q = fs.query(
+        collection(DB, "cities"),
+        where("capital", "==", true)
+      );
 
-  test("get cities where(capital, ==, true)", async () => {
-    const where = fuse.where<City>();
-    const q = fs.query(collection(DB, "cities"), where("capital", "==", true));
-
-    const querySnapshot = await fs.getDocs(q);
-    querySnapshot.forEach((doc) => {
-      expect(doc.data()).toEqual(addDataEntries[doc.id]);
+      const querySnapshot = await fs.getDocs(q);
+      querySnapshot.forEach((doc) => {
+        expect(doc.data()).toEqual(addDataEntries[doc.id]);
+      });
     });
-  });
 
-  test(`get cities where("regions", "array-contains", "west_coast")`, async () => {
-    const where = fuse.where<City>();
-    const q = fs.query(
-      collection(DB, "cities"),
-      where("regions", "array-contains", "west_coast")
-    );
-    const docs = await fs.getDocs(q);
-    expect(
-      docs.docs.every((doc) => doc.data().regions.includes("west_coast"))
-    ).toBeTruthy();
-  });
-
-  test(`get cities where("country", "in", ["USA", "Japan"]) `, async () => {
-    const where = fuse.where<City>();
-    const q = fs.query(
-      collection(DB, "cities"),
-      where("country", "in", ["USA", "Japan"])
-    );
-    const querySS = await fs.getDocs(q);
-    querySS.forEach((ss) => {
-      expect(["USA", "Japan"]).toContain(ss.data().country);
-    });
-  });
-
-  test(`get cities where("country", "not-in", ["USA", "Japan"])`, async () => {
-    const where = fuse.where<City>();
-    const q = fs.query(
-      collection(DB, "cities"),
-      where("country", "not-in", ["USA", "Japan"])
-    );
-    const querySS = await fs.getDocs(q);
-    querySS.forEach((ss) => {
-      expect(["USA", "Japan"]).not.toContain(ss.data().country);
-    });
-  });
-
-  test(`get cities where("regions", "array-contains-any", ["west_coast", "east_coast"])`, async () => {
-    const where = fuse.where<City>();
-    const q = fs.query(
-      collection(DB, "cities"),
-      where("regions", "array-contains-any", ["west_coast", "east_coast"])
-    );
-    const querySS = await fs.getDocs(q);
-    querySS.forEach((ss) => {
-      const regions = ss.data().regions;
+    test(`get cities where("regions", "array-contains", "west_coast")`, async () => {
+      const where = fuse.where<City>();
+      const q = fs.query(
+        collection(DB, "cities"),
+        where("regions", "array-contains", "west_coast")
+      );
+      const docs = await fs.getDocs(q);
       expect(
-        regions.includes("west_coast") || regions.includes("east_coast")
+        docs.docs.every((doc) => doc.data().regions.includes("west_coast"))
       ).toBeTruthy();
+    });
+
+    test(`get cities where("country", "in", ["USA", "Japan"]) `, async () => {
+      const where = fuse.where<City>();
+      const q = fs.query(
+        collection(DB, "cities"),
+        where("country", "in", ["USA", "Japan"])
+      );
+      const querySS = await fs.getDocs(q);
+      querySS.forEach((ss) => {
+        expect(["USA", "Japan"]).toContain(ss.data().country);
+      });
+    });
+
+    test(`get cities where("country", "not-in", ["USA", "Japan"])`, async () => {
+      const where = fuse.where<City>();
+      const q = fs.query(
+        collection(DB, "cities"),
+        where("country", "not-in", ["USA", "Japan"])
+      );
+      const querySS = await fs.getDocs(q);
+      querySS.forEach((ss) => {
+        expect(["USA", "Japan"]).not.toContain(ss.data().country);
+      });
+    });
+
+    test(`get cities where("regions", "array-contains-any", ["west_coast", "east_coast"])`, async () => {
+      const where = fuse.where<City>();
+      const q = fs.query(
+        collection(DB, "cities"),
+        where("regions", "array-contains-any", ["west_coast", "east_coast"])
+      );
+      const querySS = await fs.getDocs(q);
+      querySS.forEach((ss) => {
+        const regions = ss.data().regions;
+        expect(
+          regions.includes("west_coast") || regions.includes("east_coast")
+        ).toBeTruthy();
+      });
     });
   });
 
