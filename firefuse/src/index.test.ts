@@ -73,6 +73,31 @@ test("confirm is emulator running", async () => {
   expect(savedRef.data()).toEqual(data);
 });
 
+describe("Add Data", () => {
+  test("create docRef with specifing docId", async () => {
+    const LARef = doc(DB, "cities", "LA");
+    const data = {
+      name: "Los Angeles",
+      state: "CA",
+      country: "USA",
+    };
+    await fs.setDoc(LARef, data);
+    const LASS = await fs.getDoc(LARef);
+    expect(LASS.data()).toEqual(data);
+  });
+
+  test("create documentRef using collectionRef", async () => {
+    const newCityRef = doc(collection(DB, "cities"));
+    const data = {
+      name: "Los Angeles",
+      state: "CA",
+      country: "USA",
+    };
+    await fs.setDoc(newCityRef, data);
+    const savedDoc = await fs.getDoc(newCityRef);
+    expect(savedDoc.data()).toEqual(data);
+  });
+});
 describe("collection", () => {
   test("add nested collection & read", async () => {
     const paymentRef = collection(DB, "user", "a", "payment");
