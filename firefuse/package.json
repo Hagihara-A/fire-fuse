@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "jest",
-    "build": "tsc"
+    "build": "tsc",
+    "test-w": "jest --watch"
   },
   "author": "arark",
   "devDependencies": {
