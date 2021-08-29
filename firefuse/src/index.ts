@@ -61,12 +61,43 @@ export const collection =
     firestore.collection(DB, paths.join("/")) as firestore.CollectionReference<
       GetData<S, P>
     >;
-export const doc =
-  <S extends SchemaBase>() =>
-  <P extends DocumentPaths<S>>(DB: firestore.Firestore, ...paths: P) =>
-    firestore.doc(DB, paths.join("/")) as firestore.DocumentReference<
-      GetData<S, P>
-    >;
+export type AllDocumentData<S extends SchemaBase> = GetData<
+  S,
+  CollectionPaths<S>
+>;
+
+export type ChildCollectionPaths<
+  S extends SchemaBase,
+  T extends AllDocumentData<S>
+> = {
+  [K in keyof S]: S[K]["subcollection"] extends SchemaBase
+    ? S[K]["doc"] extends T
+      ? [...CollectionPaths<S[K]["subcollection"]>]
+      : ChildCollectionPaths<S[K]["subcollection"], T>
+    : never;
+}[keyof S];
+export type ChildDocumentPaths<
+  S extends SchemaBase,
+  T extends AllDocumentData<S>
+> = [...ChildCollectionPaths<S, T>, string];
+export type DataCollectionPath<
+  S extends SchemaBase,
+  T extends AllDocumentData<S>
+> = {
+  [K in keyof S]: S[K]["subcollection"] extends SchemaBase
+    ? S[K]["doc"] extends T
+      ? [K]
+      : [K, string, ...DataCollectionPath<S[K]["subcollection"], T>]
+    : never;
+}[keyof S];
+export type DataDocumentPath<
+  S extends SchemaBase,
+  T extends AllDocumentData<S>
+> = [...DataCollectionPath<S, T>, string];
+export type ChildDocumentPaths<
+  S extends SchemaBase,
+  T extends AllDocumentData<S>
+> = [...ChildCollectionPaths<S, T>, string];
 
 export type DeepKeys<T extends DocumentData> = {
   [K in keyof T]: T[K] extends DocumentData
