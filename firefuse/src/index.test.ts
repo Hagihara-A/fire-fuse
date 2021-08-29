@@ -1,19 +1,10 @@
-import {
-  getFirestore,
-  connectFirestoreEmulator,
-  collection,
-  addDoc,
-  getDoc,
-  terminate,
-  setDoc,
-} from "firebase/firestore";
-import * as fuse from "./index";
-import { Collection } from ".";
+import * as fs from "firebase/firestore";
+import * as fuse from ".";
 
 import { initializeApp } from "firebase/app";
 const app = initializeApp({ projectId: "pid" });
-const DB = getFirestore(app);
-connectFirestoreEmulator(DB, "localhost", 8080);
+const DB = fs.getFirestore(app);
+fs.connectFirestoreEmulator(DB, "localhost", 8080);
 
 type User = {
   name: string;
@@ -48,63 +39,75 @@ type C3 = {
 };
 
 type MySchema = {
-  user: Collection<User, { payment: Collection<Payment> }>;
-  room: Collection<Room>;
-  C1: Collection<C1, { C2: Collection<C2, { C3: Collection<C3> }> }>;
+  user: fuse.Collection<User, { payment: fuse.Collection<Payment> }>;
+  room: fuse.Collection<Room>;
+  C1: fuse.Collection<
+    C1,
+    { C2: fuse.Collection<C2, { C3: fuse.Collection<C3> }> }
+  >;
+  cities: fuse.Collection<City>;
+};
+type City = {
+  name: string;
+  state: string | null;
+  country: string;
+  capital?: boolean;
+  population?: number;
+  regions?: string[];
 };
 
-const fcollection = fuse.collection<MySchema>();
-const fdoc = fuse.doc<MySchema>();
+const collection = fuse.collection<MySchema>();
+const doc = fuse.doc<MySchema>();
 afterAll(async () => {
-  await terminate(DB);
+  await fs.terminate(DB);
 });
 
 test("confirm is emulator running", async () => {
-  const colRef = collection(DB, "a/b/c");
+  const colRef = fs.collection(DB, "a/b/c");
   expect(colRef.id).toBe("c");
   expect(colRef.parent.parent.id).toBe("a");
   const data = { test: "test" };
-  const doc = await addDoc(colRef, data);
+  const doc = await fs.addDoc(colRef, data);
 
-  const savedRef = await getDoc(doc);
+  const savedRef = await fs.getDoc(doc);
   expect(savedRef.data()).toEqual(data);
 });
 
 describe("collection", () => {
   test("add nested collection & read", async () => {
-    const paymentRef = fcollection(DB, "user", "a", "payment");
+    const paymentRef = collection(DB, "user", "a", "payment");
     expect(paymentRef.path).toBe("user/a/payment");
     const payment: Payment = { cardNumber: 1234 };
-    const docRef = await addDoc(paymentRef, payment);
+    const docRef = await fs.addDoc(paymentRef, payment);
 
-    const savedDoc = await getDoc(docRef);
+    const savedDoc = await fs.getDoc(docRef);
     expect(savedDoc.data()).toEqual(payment);
   });
 });
 
 describe("doc", () => {
   test("create nested document & read it", async () => {
-    const docRef = fdoc(DB, "user", "a", "payment", "b");
+    const docRef = doc(DB, "user", "a", "payment", "b");
     expect(docRef.id).toBe("b");
 
     const data = { cardNumber: 1234 };
-    await setDoc(docRef, data);
+    await fs.setDoc(docRef, data);
 
-    const savedDoc = await getDoc(docRef);
+    const savedDoc = await fs.getDoc(docRef);
     expect(savedDoc.data()).toEqual(data);
   });
 
   test("update nested doc partially", async () => {
-    const docRef = fdoc(DB, "C1", "c1", "C2", "c2", "C3", "c3");
+    const docRef = doc(DB, "C1", "c1", "C2", "c2", "C3", "c3");
     expect(docRef.id).toBe("c3");
 
     const data = {
       c3: "c3",
       c31: { c32: { c33: "c33", c33_2: 123 } },
     };
-    await setDoc(docRef, data);
+    await fs.setDoc(docRef, data);
     await fuse.updateDoc(docRef, { "c31.c32.c33": "update" });
-    const updatedData = (await getDoc(docRef)).data();
+    const updatedData = (await fs.getDoc(docRef)).data();
     const expectedData: C3 = {
       c3: "c3",
       c31: { c32: { c33: "update", c33_2: 123 } },
@@ -113,18 +116,18 @@ describe("doc", () => {
   });
 
   test("overwrite nested value", async () => {
-    const docRef = fdoc(DB, "C1", "c1", "C2", "c2", "C3", "c3");
+    const docRef = doc(DB, "C1", "c1", "C2", "c2", "C3", "c3");
     expect(docRef.id).toBe("c3");
 
     const data = {
       c3: "c3",
       c31: { c32: { c33: "c33", c33_2: 123 } },
     };
-    await setDoc(docRef, data);
+    await fs.setDoc(docRef, data);
     await fuse.updateDoc(docRef, {
       c31: { c32: { c33: "update", c33_2: 321 } },
     });
-    const updatedData = (await getDoc(docRef)).data();
+    const updatedData = (await fs.getDoc(docRef)).data();
     const expectedData: C3 = {
       c3: "c3",
       c31: { c32: { c33: "update", c33_2: 321 } },
@@ -133,18 +136,18 @@ describe("doc", () => {
   });
 
   test("disapper unspecified value of nested object", async () => {
-    const docRef = fdoc(DB, "C1", "c1", "C2", "c2", "C3", "c3");
+    const docRef = doc(DB, "C1", "c1", "C2", "c2", "C3", "c3");
     expect(docRef.id).toBe("c3");
 
     const data = {
       c3: "c3",
       c31: { c32: { c33: "c33", c33_2: 123 } },
     };
-    await setDoc(docRef, data);
+    await fs.setDoc(docRef, data);
     await fuse.updateDoc(docRef, {
       c31: { c32: { c33: "update" } },
     });
-    const updatedData = (await getDoc(docRef)).data();
+    const updatedData = (await fs.getDoc(docRef)).data();
     const expectedData: C3 = {
       c3: "c3",
       c31: { c32: { c33: "update", c33_2: undefined } },
