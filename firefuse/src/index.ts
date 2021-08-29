@@ -12,6 +12,7 @@ type FieldType =
 type DocumentData = {
   [K: string]: FieldType;
 };
+
 export type SchemaBase = {
   [K in string]: {
     doc: DocumentData;
@@ -61,49 +62,18 @@ export const collection =
     firestore.collection(DB, paths.join("/")) as firestore.CollectionReference<
       GetData<S, P>
     >;
-export type AllDocumentData<S extends SchemaBase> = GetData<
-  S,
-  CollectionPaths<S>
->;
-
-export type ChildCollectionPaths<
-  S extends SchemaBase,
-  T extends AllDocumentData<S>
-> = {
-  [K in keyof S]: S[K]["subcollection"] extends SchemaBase
-    ? S[K]["doc"] extends T
-      ? [...CollectionPaths<S[K]["subcollection"]>]
-      : ChildCollectionPaths<S[K]["subcollection"], T>
-    : never;
-}[keyof S];
-export type ChildDocumentPaths<
-  S extends SchemaBase,
-  T extends AllDocumentData<S>
-> = [...ChildCollectionPaths<S, T>, string];
-export type DataCollectionPath<
-  S extends SchemaBase,
-  T extends AllDocumentData<S>
-> = {
-  [K in keyof S]: S[K]["subcollection"] extends SchemaBase
-    ? S[K]["doc"] extends T
-      ? [K]
-      : [K, string, ...DataCollectionPath<S[K]["subcollection"], T>]
-    : never;
-}[keyof S];
-export type DataDocumentPath<
-  S extends SchemaBase,
-  T extends AllDocumentData<S>
-> = [...DataCollectionPath<S, T>, string];
 
 export const doc = <S extends SchemaBase>() => {
   function d<P extends DocumentPaths<S>>(
     DB: firestore.Firestore,
     ...paths: P
   ): firestore.DocumentReference<GetData<S, P>>;
+
   function d<T extends DocumentData>(
     collectionRef: firestore.CollectionReference<T>,
     ...id: [string] | []
   ): firestore.DocumentReference<T>;
+
   function d<
     T extends DocumentData,
     P extends [string, string, ...string[]] & DocumentPaths<S>
@@ -140,9 +110,11 @@ export type Join<T extends string[]> = T extends [infer H]
     ? `${H & string}.${Join<Rest> & string}`
     : never
   : never;
+
 export type UpdateKeys<T extends DocumentData> = Join<
   DeepKeys<T> extends string[] ? DeepKeys<T> : never
 >;
+
 export type UpdateData<
   T extends DocumentData,
   U extends UpdateKeys<T> = UpdateKeys<T>
@@ -157,9 +129,11 @@ export type UpdateData<
     ? T[K]
     : never;
 };
+
 export type DeepPartial<T extends DocumentData> = {
   [K in keyof T]?: T[K] extends DocumentData ? DeepPartial<T[K]> : T[K];
 };
+
 export const updateDoc = <T extends DocumentData>(
   doc: firestore.DocumentReference<T>,
   data: UpdateData<T> | DeepPartial<T>
