@@ -20,9 +20,6 @@ type Room = {
     dining: number;
     kitchen: number;
   };
-  level1: {
-    level2_1: string[];
-  };
 };
 
 type C1 = {
@@ -61,7 +58,6 @@ const doc = fuse.doc<MySchema>();
 afterAll(async () => {
   await fs.terminate(DB);
 });
-
 test("confirm is emulator running", async () => {
   const colRef = fs.collection(DB, "a/b/c");
   expect(colRef.id).toBe("c");
@@ -252,7 +248,7 @@ describe("read data once", () => {
       c31: { c32: { c33: "c33", c33_2: 123 } },
     };
     await fs.setDoc(docRef, data);
-    await fuse.updateDoc(docRef, { "c31.c32.c33": "update" });
+    await fs.updateDoc(docRef, { "c31.c32.c33": "update" });
     const updatedData = (await fs.getDoc(docRef)).data();
     const expectedData: C3 = {
       c3: "c3",
@@ -270,7 +266,7 @@ describe("read data once", () => {
       c31: { c32: { c33: "c33", c33_2: 123 } },
     };
     await fs.setDoc(docRef, data);
-    await fuse.updateDoc(docRef, {
+    await fs.updateDoc(docRef, {
       c31: { c32: { c33: "update", c33_2: 321 } },
     });
     const updatedData = (await fs.getDoc(docRef)).data();
@@ -290,7 +286,7 @@ describe("read data once", () => {
       c31: { c32: { c33: "c33", c33_2: 123 } },
     };
     await fs.setDoc(docRef, data);
-    await fuse.updateDoc(docRef, {
+    await fs.updateDoc(docRef, {
       c31: { c32: { c33: "update" } },
     });
     const updatedData = (await fs.getDoc(docRef)).data();
