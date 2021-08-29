@@ -1,4 +1,4 @@
-# fire-fuse. Definitely typed drop-in replacement of firestore
+# fire-fuse. Definitely typed utilities for firestore
 
 ## What can I do with this package?
 
@@ -23,6 +23,10 @@ This package enable you to specify firestore's path completely type safely.
 And more, type safe queries such as `where`, `orderBy` are provided.
 
 ## How to use
+
+```sh
+npm i firefuse firebase
+```
 
 First of all, define your schema that represents the Documet-relation. This is just a plain Typescript type, so you can reuse existing ones.
 

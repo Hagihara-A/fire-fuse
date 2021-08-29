@@ -1,7 +1,7 @@
 {
   "name": "firefuse",
   "version": "1.0.0",
-  "description": "",
+  "description": "Definitely typed utilities for firestore",
   "type": "module",
   "scripts": {
     "test": "jest",
@@ -24,5 +24,10 @@
   ],
   "peerDependencies": {
     "firebase": "^9.0.0"
-  }
+  },
+  "license": "MIT",
+  "keywords": [
+    "typescript",
+    "firestore"
+  ]
 }
