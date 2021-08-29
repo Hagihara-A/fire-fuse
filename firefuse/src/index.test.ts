@@ -300,4 +300,31 @@ describe("read data once", () => {
     };
     expect(updatedData).toEqual(expectedData);
   });
+
+  describe("orderBy", () => {
+    const citiesRef = collection(DB, "cities");
+    test(`get cities orderBy("population")`, async () => {
+      const orderBy = fuse.orderBy<City>();
+      const q = fs.query(citiesRef, orderBy("population"));
+      const querySS = await fs.getDocs(q);
+      let prev = 0;
+      querySS.forEach((ss) => {
+        const population = ss.data().population;
+        expect(population).toBeGreaterThanOrEqual(prev);
+        prev = population;
+      });
+    });
+
+    test(`get cities orderBy("population")`, async () => {
+      const orderBy = fuse.orderBy<City>();
+      const q = fs.query(citiesRef, orderBy("population", "desc"));
+      const querySS = await fs.getDocs(q);
+      let prev = 100000000;
+      querySS.forEach((ss) => {
+        const population = ss.data().population;
+        expect(population).toBeLessThanOrEqual(prev);
+        prev = population;
+      });
+    });
+  });
 });
