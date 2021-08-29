@@ -168,3 +168,10 @@ export const where = <T extends DocumentData>() => {
     value: V
   ) => firestore.where(field, op, value);
 };
+
+export const orderBy = <T extends DocumentData>() => {
+  return <F extends string & keyof T>(
+    field: F,
+    order?: firestore.OrderByDirection
+  ) => (order ? firestore.orderBy(field, order) : firestore.orderBy(field));
+};
