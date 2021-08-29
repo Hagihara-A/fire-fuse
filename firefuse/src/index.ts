@@ -138,3 +138,33 @@ export const updateDoc = <T extends DocumentData>(
   doc: firestore.DocumentReference<T>,
   data: UpdateData<T> | DeepPartial<T>
 ) => firestore.updateDoc(doc, data as any);
+
+export type ArrayOp = Extract<
+  firestore.WhereFilterOp,
+  "array-contains" | "array-contains-any"
+>;
+
+export type PrimitiveOp = Extract<
+  firestore.WhereFilterOp,
+  "<" | "<=" | "==" | "!=" | ">=" | ">" | "in" | "not-in"
+>;
+
+export const where = <T extends DocumentData>() => {
+  return <
+    F extends string & keyof T,
+    V extends T[F] extends (infer A)[]
+      ? OP extends "array-contains"
+        ? A
+        : T[F]
+      : OP extends "in" | "not-in"
+      ? T[F] extends any[]
+        ? never
+        : T[F][]
+      : T[F],
+    OP extends T[F] extends any[] ? ArrayOp : PrimitiveOp
+  >(
+    field: F,
+    op: OP,
+    value: V
+  ) => firestore.where(field, op, value);
+};
