@@ -1,6 +1,21 @@
 import * as fuse from "firefuse";
 import * as firestore from "firebase/firestore";
 
+type Schema = {
+  user: {
+    doc: User;
+    subcollection: {
+      payment: {
+        doc: Payment;
+        subcollection: {
+          paymentLog: {
+            doc: PaymentLog;
+          };
+        };
+      };
+    };
+  };
+};
 type User = {
   name: { first: string; last: number; middle?: string };
   age: number;
@@ -19,21 +34,6 @@ type Payment = {
 type PaymentLog = {
   settledAt: firestore.Timestamp;
   amount: number;
-};
-type Schema = {
-  user: {
-    doc: User;
-    subcollection: {
-      payment: {
-        doc: Payment;
-        subcollection: {
-          paymentLog: {
-            doc: PaymentLog;
-          };
-        };
-      };
-    };
-  };
 };
 
 const DB = firestore.getFirestore();
