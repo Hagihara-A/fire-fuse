@@ -178,5 +178,95 @@ export const orderBy = <T extends DocumentData>() => {
   return <F extends KeyofPrimitive<T> & string>(
     field: F,
     order?: firestore.OrderByDirection
-  ) => (order ? firestore.orderBy(field, order) : firestore.orderBy(field));
+  ) => firestore.orderBy(field, order) as OrderByConstraint<F>;
 };
+
+export interface WhereConstraint<
+  F extends string,
+  OP extends firestore.WhereFilterOp
+> extends firestore.QueryConstraint {
+  readonly type: Extract<firestore.QueryConstraintType, "where">;
+  field: F;
+  op: OP;
+}
+
+export interface OrderByConstraint<F extends string>
+  extends firestore.QueryConstraint {
+  readonly type: Extract<firestore.QueryConstraintType, "orderBy">;
+  field: F;
+}
+
+export interface OtherConstraints extends firestore.QueryConstraint {
+  readonly type: Exclude<firestore.QueryConstraintType, "where" | "orderBy">;
+}
+
+type CompareOp = Extract<firestore.WhereFilterOp, "<" | "<=" | ">" | ">=">;
+type NotOp = Extract<firestore.WhereFilterOp, "not-in" | "!=">;
+
+type Repeat<T> = [] | [T] | [T, T] | [T, T, T];
+
+export type AllowedConstraints<T extends DocumentData> = {
+  [K in string & keyof T]: readonly [
+    ...([] | [WhereConstraint<K, NotOp>]),
+    ...(
+      | []
+      | [WhereConstraint<K, "array-contains">]
+      | [WhereConstraint<K, "array-contains-any">]
+      | [WhereConstraint<K, "in">]
+    ),
+    ...Repeat<WhereConstraint<K, CompareOp>>,
+    ...Repeat<WhereConstraint<string & keyof T, "==">>,
+    ...Repeat<OrderByConstraint<K>>,
+    ...OtherConstraints[]
+  ];
+}[string & keyof T];
+
+export const query = <T extends DocumentData>(
+  query: firestore.Query<T>,
+  ...queryConstraints: AllowedConstraints<T>
+) => firestore.query(query, ...queryConstraints);
+
+export const limit = (limit: number) =>
+  firestore.limit(limit) as OtherConstraints;
+export const limitToLast = (limit: number) =>
+  firestore.limitToLast(limit) as OtherConstraints;
+
+export function startAt(
+  snapshot: firestore.DocumentSnapshot<unknown>
+): OtherConstraints;
+export function startAt(...fieldValues: unknown[]): OtherConstraints;
+export function startAt(
+  ...fieldValues: [firestore.DocumentSnapshot<unknown>] | unknown[]
+) {
+  return firestore.startAt(...fieldValues) as OtherConstraints;
+}
+
+export function startAfter(
+  snapshot: firestore.DocumentSnapshot<unknown>
+): OtherConstraints;
+export function startAfter(...fieldValues: unknown[]): OtherConstraints;
+export function startAfter(
+  ...fieldValues: unknown[] | [firestore.DocumentSnapshot<unknown>]
+) {
+  return firestore.startAfter(...fieldValues);
+}
+
+export function endAt(
+  snapshot: firestore.DocumentSnapshot<unknown>
+): OtherConstraints;
+export function endAt(...fieldValues: unknown[]): OtherConstraints;
+export function endAt(
+  ...fieldValues: [firestore.DocumentSnapshot<unknown>] | unknown[]
+) {
+  return firestore.endAt(...fieldValues) as OtherConstraints;
+}
+
+export function endBefore(
+  snapshot: firestore.DocumentSnapshot<unknown>
+): OtherConstraints;
+export function endBefore(...fieldValues: unknown[]): OtherConstraints;
+export function endBefore(
+  ...fieldValues: [firestore.DocumentSnapshot<unknown>] | unknown[]
+) {
+  return firestore.endBefore(...fieldValues) as OtherConstraints;
+}
