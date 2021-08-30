@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
-    "test-w": "jest --watch"
+    "test-w": "jest --watch",
+    "lint": "eslint 'src/**'"
   },
   "author": "arark",
   "devDependencies": {
