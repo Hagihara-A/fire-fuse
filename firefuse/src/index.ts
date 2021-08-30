@@ -13,12 +13,12 @@ export type DocumentData = {
   [K: string]: FieldType;
 };
 
-export type SchemaBase = {
-  [K in string]: {
+export interface SchemaBase {
+  [K: string]: {
     doc: DocumentData;
     subcollection?: SchemaBase;
   };
-};
+}
 export type Collection<
   T extends DocumentData,
   SC extends SchemaBase | undefined = undefined
