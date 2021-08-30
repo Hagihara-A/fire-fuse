@@ -149,21 +149,23 @@ export type PrimitiveOp = Extract<
 export const where = <T extends DocumentData>() => {
   return <
     F extends string & keyof T,
-    V extends T[F] extends (infer A)[]
-      ? OP extends "array-contains"
-        ? A
-        : T[F]
-      : OP extends "in" | "not-in"
+    V extends OP extends "array-contains-any"
       ? T[F] extends any[]
-        ? never
-        : T[F][]
+        ? T[F]
+        : never
+      : OP extends "in" | "not-in"
+      ? T[F][]
+      : OP extends "array-contains"
+      ? T[F] extends (infer A)[]
+        ? A
+        : never
       : T[F],
     OP extends T[F] extends any[] ? ArrayOp : PrimitiveOp
   >(
     field: F,
     op: OP,
     value: V
-  ) => firestore.where(field, op, value);
+  ) => firestore.where(field, op, value) as WhereConstraint<F, OP>;
 };
 
 export type KeyofPrimitive<
