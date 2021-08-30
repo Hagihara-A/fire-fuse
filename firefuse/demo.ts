@@ -78,5 +78,4 @@ query(
 query(userCol, where("age", ">", 23), orderBy("birthDay")); //❌: orderBy should be where-ed field (firestore's limitation)
 
 // use other constraints
-const { limit, limitToLast, startAt, startAfter, endAt, endBefore } = "fuse";
-
+const { limit, limitToLast, startAt, startAfter, endAt, endBefore } = fuse;
