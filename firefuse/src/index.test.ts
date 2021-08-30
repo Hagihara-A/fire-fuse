@@ -453,7 +453,7 @@ describe("multple queries", () => {
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
   });
 
-  test("1 compare is not valid", () => {
+  test("1 compare is valid", () => {
     const constraints = [where("state", ">=", "CA")] as const;
     type _ = Assert<Extends<Constraints, typeof constraints>>;
   });
