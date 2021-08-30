@@ -53,17 +53,30 @@ const userCollection = collection(DB, "user"); // ✅
 doc(userCollection); // ✅
 doc(userCollection, "uid"); // ✅
 
-const where = fuse.where<User>();
 const userCol = collection(DB, "user");
-firestore.query(userCol, where("sex", "==", "male")); // ✅
-firestore.query(userCol, where("sex", "==", "no-data")); // ❌: Argument of type '"no-data"' is not assignable to parameter of type '"male" | "female" | "other"'.
-firestore.query(userCol, where("skills", "array-contains", "c")); // ✅
-firestore.query(userCol, where("skills", "array-contains", ["c", "java"])); // ❌:Argument of type 'string[]' is not assignable to parameter of type 'string'.
-firestore.query(userCol, where("skills", "<", "c++")); // ❌:Argument of type '"<"' is not assignable to parameter of type 'ArrayOp'.
-firestore.query(userCol, where("age", "==", 22)); // ✅
-firestore.query(userCol, where("age", "==", "22")); // ❌: Argument of type 'string' is not assignable to parameter of type 'number'.
-firestore.query(userCol, where("age", "array-contains", 22)); // ❌: Argument of type '"array-contains"' is not assignable to parameter of type 'PrimitiveOp'.
-
+const { query } = fuse;
+const where = fuse.where<User>();
 const orderBy = fuse.orderBy<User>();
-firestore.query(userCol, orderBy("age")); // ✅
-firestore.query(userCol, orderBy("skills")); // ❌: Argument of type '"skills"' is not assignable to parameter of type '"age" | "sex" | "birthDay" | "isStudent"'
+query(userCol, where("age", "==", 22)); // ✅
+query(userCol, where("age", "==", "22")); // ❌: Argument of type 'string' is not assignable to parameter of type 'number'.
+query(userCol, where("skills", "array-contains", "c")); // ✅
+query(userCol, where("skills", "array-contains", ["c", "java"])); // ❌:Argument of type 'string[]' is not assignable to parameter of type 'string'.
+
+query(userCol, orderBy("age")); // ✅
+query(userCol, orderBy("skills")); // ❌: Argument of type '"skills"' is not assignable to parameter of type '"age" | "sex" | "birthDay" | "isStudent"'
+
+query(userCol, where("age", ">", 22), where("age", "<", 30)); // ✅: filter on single field
+query(userCol, where("age", ">", 22), where("sex", "<", "male")); // ❌: filter on multiple field (firestore's limitation).
+
+query(
+  userCol,
+  where("sex", "in", ["female", "male"]),
+  where("age", "not-in", [22, 23]),
+  where("skills", "array-contains-any", ["c", "java"])
+); // ❌:  in, not-in or array-contains-any should be once (firestore's limitation).
+
+query(userCol, where("age", ">", 23), orderBy("birthDay")); //❌: orderBy should be where-ed field (firestore's limitation)
+
+// use other constraints
+const { limit, limitToLast, startAt, startAfter, endAt, endBefore } = "fuse";
+
