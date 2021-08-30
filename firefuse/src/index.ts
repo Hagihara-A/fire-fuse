@@ -55,10 +55,7 @@ export type GetData<
 
 export const collection =
   <S extends SchemaBase>() =>
-  <P extends string[] & CollectionPaths<S>>(
-    DB: firestore.Firestore,
-    ...paths: P
-  ) =>
+  <P extends CollectionPaths<S>>(DB: firestore.Firestore, ...paths: P) =>
     firestore.collection(DB, paths.join("/")) as firestore.CollectionReference<
       GetData<S, P>
     >;
