@@ -9,9 +9,9 @@ export type FieldType =
   | FieldType[]
   | DocumentData;
 
-export type DocumentData = {
+export interface DocumentData {
   [K: string]: FieldType;
-};
+}
 
 export interface SchemaBase {
   [K: string]: {
