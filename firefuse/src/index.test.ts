@@ -3,17 +3,17 @@ import * as fuse from ".";
 import { initializeApp } from "firebase/app";
 
 const app = initializeApp({ projectId: "pid" });
-const DB = fs.getFirestore(app);
+export const DB = fs.getFirestore(app);
 fs.connectFirestoreEmulator(DB, "localhost", 8080);
 
-type User = {
+export type User = {
   name: string;
   age: number;
 };
-type Payment = {
+export type Payment = {
   cardNumber: number;
 };
-type Room = {
+export type Room = {
   size: number;
   rooms: {
     living: number;
@@ -22,20 +22,20 @@ type Room = {
   };
 };
 
-type C1 = {
+export type C1 = {
   c1: "c1";
 };
 
-type C2 = {
+export type C2 = {
   c2: "c2";
 };
 
-type C3 = {
+export type C3 = {
   c3: "c3";
   c31: { c32: { c33: string; c33_2: number } };
 };
 
-type MySchema = {
+export type MySchema = {
   user: fuse.Collection<User, { payment: fuse.Collection<Payment> }>;
   room: fuse.Collection<Room>;
   C1: fuse.Collection<
@@ -44,7 +44,7 @@ type MySchema = {
   >;
   cities: fuse.Collection<City>;
 };
-type City = {
+export type City = {
   name: string;
   state: string | null;
   country: string;
@@ -53,13 +53,14 @@ type City = {
   regions?: string[];
 };
 
-type Extends<E, A> = A extends E ? true : false;
-type NotExtends<E, A> = A extends E ? false : true;
-type Assert<T extends true> = T;
+export type Extends<E, A> = A extends E ? true : false;
+export type NotExtends<E, A> = A extends E ? false : true;
+export type Assert<T extends true> = T;
 
-const collection = fuse.collection<MySchema>();
-const doc = fuse.doc<MySchema>();
+export const collection = fuse.collection<MySchema>();
+export const doc = fuse.doc<MySchema>();
 const { query } = fuse;
+export { query };
 
 afterAll(async () => {
   await fs.terminate(DB);
@@ -196,7 +197,7 @@ describe("read data once", () => {
     });
 
     test("use fuse.where with firestore.query", () => {
-      const q = fs.query(collection(DB, "user"), where("capital", "==", true));
+      fs.query(collection(DB, "user"), where("capital", "==", true));
     });
 
     test("where(capital, ==, true) is OK", async () => {
@@ -390,131 +391,5 @@ describe("read data once", () => {
         prev = population;
       });
     });
-  });
-});
-
-describe("multple queries", () => {
-  const where = fuse.where<City>();
-  const orderBy = fuse.orderBy<City>();
-  type Constraints = fuse.AllowedConstraints<City>;
-
-  test(" == & >  is valid", () => {
-    const constraints: Constraints = [
-      where("state", "==", "CA"),
-      where("population", ">", 10000),
-    ] as const;
-    type _ = Assert<Extends<Constraints, typeof constraints>>;
-  });
-
-  test("== & > is not valid", () => {
-    const constraints = [
-      where("state", "==", "CA"),
-      where("population", ">", 10000),
-    ] as const;
-    type _ = Assert<Extends<Constraints, typeof constraints>>;
-  });
-
-  // known bug, not implemented
-  // test("!= & not-in is not valid", () => {
-  //   const constraints = [
-  //     where("state", "!=", "CA"),
-  //     where("state", "not-in", ["ABC"]),
-  //   ] as const;
-  //   type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-  // });
-
-  test("not-in & in & >= & == && orderBy && ...otherConstraints is valid", () => {
-    const constraints: Constraints = [
-      where("capital", "==", true),
-      where("state", ">=", "ABC"),
-      where("state", "in", ["CA"]),
-      orderBy("state"),
-      fuse.limit(3),
-      fuse.limitToLast(2),
-      fuse.startAt(1000),
-      fuse.startAfter(10000),
-      fuse.endAt(100000),
-      fuse.endBefore(1000000),
-    ] as const;
-    type _ = Assert<Extends<Constraints, typeof constraints>>;
-  });
-
-  test("state >= A & population > B is NG", () => {
-    const constraints = [
-      where("state", ">=", "CA"),
-      where("population", ">", 100000),
-    ] as const;
-    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-  });
-
-  test(">= & != is NG", () => {
-    const constraints = [
-      where("state", ">=", "CA"),
-      where("capital", "!=", true),
-    ] as const;
-    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-  });
-
-  test(">= & not-in is NG", () => {
-    const constraints = [
-      where("state", ">=", "CA"),
-      where("state", "not-in", ["CA"]),
-    ] as const;
-    type _ = Assert<Extends<Constraints, typeof constraints>>;
-  });
-
-  test(">= & >= & >= & >= is NG", () => {
-    const constraints = [
-      where("state", ">=", "CA"),
-      where("state", ">=", "CA"),
-      where("state", ">=", "CA"),
-      where("state", ">=", "CA"),
-    ] as const;
-    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-  });
-
-  test(">= is OK", () => {
-    const constraints = [where("state", ">=", "CA")] as const;
-    type _ = Assert<Extends<Constraints, typeof constraints>>;
-  });
-
-  test("not-in & in is NG", () => {
-    const constraints = [
-      where("name", "not-in", ["A", "B"]),
-      where("name", "in", ["A", "B"]),
-    ] as const;
-    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-  });
-
-  test("in & arr-contains-any is NG", () => {
-    const constraints = [
-      where("name", "in", ["A", "B"]),
-      where("regions", "array-contains-any", ["A", "B"]),
-    ] as const;
-    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-  });
-
-  test("not-in & arr-contains-any is NG", () => {
-    const constraints = [
-      where("name", "not-in", ["A", "B"]),
-      where("regions", "array-contains-any", ["A", "B"]),
-    ] as const;
-    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-  });
-
-  test("arr-con-any & arr-con is NG", () => {
-    const constraints = [
-      where("regions", "array-contains-any", ["A", "B"]),
-      where("regions", "array-contains", "A"),
-    ] as const;
-    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-  });
-
-  test("arr-con & arr-con is NG", () => {
-    const constraints = [
-      where("regions", "array-contains-any", ["A", "B"]),
-      where("regions", "array-contains", "A"),
-    ] as const;
-    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
   });
 });
