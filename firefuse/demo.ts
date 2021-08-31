@@ -57,13 +57,13 @@ const userCol = collection(DB, "user");
 const { query } = fuse;
 const where = fuse.where<User>();
 const orderBy = fuse.orderBy<User>();
-query(userCol, where("age", "==", 22)); // ✅
-query(userCol, where("age", "==", "22")); // ❌: Argument of type 'string' is not assignable to parameter of type 'number'.
-query(userCol, where("skills", "array-contains", "c")); // ✅
-query(userCol, where("skills", "array-contains", ["c", "java"])); // ❌:Argument of type 'string[]' is not assignable to parameter of type 'string'.
+where("age", "==", 22); // ✅
+where("age", "==", "22"); // ❌: Argument of type 'string' is not assignable to parameter of type 'number'.
+where("skills", "array-contains", "c"); // ✅
+where("skills", "array-contains", ["c", "java"]); // ❌:Argument of type 'string[]' is not assignable to parameter of type 'string'.
 
-query(userCol, orderBy("age")); // ✅
-query(userCol, orderBy("skills")); // ❌: Argument of type '"skills"' is not assignable to parameter of type '"age" | "sex" | "birthDay" | "isStudent"'
+orderBy("age"); // ✅
+orderBy("skills"); // ❌: Argument of type '"skills"' is not assignable to parameter of type '"age" | "sex" | "birthDay" | "isStudent"'
 
 query(userCol, where("age", ">", 22), where("age", "<", 30)); // ✅: filter on single field
 query(userCol, where("age", ">", 22), where("sex", "<", "male")); // ❌: filter on multiple field (firestore's limitation).
@@ -73,9 +73,9 @@ query(
   where("sex", "in", ["female", "male"]),
   where("age", "not-in", [22, 23]),
   where("skills", "array-contains-any", ["c", "java"])
-); // ❌:  in, not-in or array-contains-any should be once (firestore's limitation).
+); // ❌:  in, not-in or array-contains-any should be used at the same time and appear only once (firestore's limitation).
 
-query(userCol, where("age", ">", 23), orderBy("birthDay")); //❌: orderBy should be where-ed field (firestore's limitation)
+query(userCol, where("age", ">", 23), orderBy("birthDay")); //❌: orderBy should be filtered field (firestore's limitation)
 
 // use other constraints
 const { limit, limitToLast, startAt, startAfter, endAt, endBefore } = fuse;
