@@ -67,15 +67,20 @@ orderBy("skills"); // ❌: Argument of type '"skills"' is not assignable to para
 
 query(userCol, where("age", ">", 22), where("age", "<", 30)); // ✅: filter on single field
 query(userCol, where("age", ">", 22), where("sex", "<", "male")); // ❌: filter on multiple field (firestore's limitation).
+query(userCol, where("age", ">", 22), where("sex", "not-in", ["male"])); // ❌: "<", "<=", ">=", ">" and not-in must filter same field (firestore's limitation).
 
 query(
   userCol,
   where("sex", "in", ["female", "male"]),
   where("age", "not-in", [22, 23]),
   where("skills", "array-contains-any", ["c", "java"])
-); // ❌:  in, not-in or array-contains-any should be used at the same time and appear only once (firestore's limitation).
+); // ❌:  in, not-in or array-contains-any must not be used at the same time and appear only once (firestore's limitation).
 
-query(userCol, where("age", ">", 23), orderBy("birthDay")); //❌: orderBy should be filtered field (firestore's limitation)
+query(userCol, where("age", "<", 22), orderBy("age"), orderBy("birthDay")); // ✅
+query(userCol, where("age", ">", 23), orderBy("birthDay")); //❌: first orderBy's field must be filtered field in where(firestore's limitation)
 
 // use other constraints
 const { limit, limitToLast, startAt, startAfter, endAt, endBefore } = fuse;
+
+const { query, limit, limitToLast, startAt, startAfter, endAt, endBefore } =
+  fuse;
