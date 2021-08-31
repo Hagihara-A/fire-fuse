@@ -194,18 +194,28 @@ describe("multple queries", () => {
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
   });
 
-  test("population > 123 & orderBy(population) is OK", ()=>{
+  test("population > 123 & orderBy(population) is OK", () => {
     const constraints = [
-        where("population", ">", 123),
-        orderBy("population")
-      ] as const;
-      type _ = Assert<Extends<Constraints, typeof constraints>>;
-  })
-  test("population > 123 & orderBy(name) is NG", ()=>{
+      where("population", ">", 123),
+      orderBy("population"),
+    ] as const;
+    type _ = Assert<Extends<Constraints, typeof constraints>>;
+  });
+
+  test("population > 123 & orderBy(name) is NG", () => {
     const constraints = [
-        where("population", ">", 123),
-        orderBy("name")
-      ] as const;
-      type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-  })
+      where("population", ">", 123),
+      orderBy("name"),
+    ] as const;
+    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+  });
+
+  test(`where(name), orderBy(name), orderBy(population) is OK`, () => {
+    const constraints = [
+      where("name", ">", "ABC"),
+      orderBy("name"),
+      orderBy("population"),
+    ] as const;
+    type _ = Assert<Extends<Constraints, typeof constraints>>;
+  });
 });
