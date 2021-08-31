@@ -1,6 +1,6 @@
 {
   "name": "firefuse",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Definitely typed utilities for firestore",
   "type": "module",
   "scripts": {
