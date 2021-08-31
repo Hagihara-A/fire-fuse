@@ -149,23 +149,23 @@ export type PrimitiveOp = Extract<
 export const where = <T extends DocumentData>() => {
   return <
     F extends string & keyof T,
+    OP extends T[F] extends any[] ? ArrayOp : PrimitiveOp,
     V extends OP extends "array-contains-any"
-      ? T[F] extends any[]
+      ? T[F] extends FieldType[]
         ? T[F]
         : never
       : OP extends "in" | "not-in"
       ? T[F][]
       : OP extends "array-contains"
-      ? T[F] extends (infer A)[]
-        ? A
+      ? T[F] extends FieldType[]
+        ? T[F][number]
         : never
-      : T[F],
-    OP extends T[F] extends any[] ? ArrayOp : PrimitiveOp
+      : T[F]
   >(
     field: F,
     op: OP,
     value: V
-  ) => firestore.where(field, op, value) as WhereConstraint<F, OP>;
+  ) => firestore.where(field, op, value) as WhereConstraint<F, OP, V>;
 };
 
 export type KeyofPrimitive<
@@ -183,11 +183,13 @@ export const orderBy = <T extends DocumentData>() => {
 
 export interface WhereConstraint<
   F extends string,
-  OP extends firestore.WhereFilterOp
+  OP extends firestore.WhereFilterOp,
+  V extends FieldType
 > extends firestore.QueryConstraint {
   readonly type: Extract<firestore.QueryConstraintType, "where">;
-  field: F;
-  op: OP;
+  _field: F;
+  _op: OP;
+  _value: V;
 }
 
 export interface OrderByConstraint<F extends string>
@@ -201,25 +203,62 @@ export interface OtherConstraints extends firestore.QueryConstraint {
 }
 
 type CompareOp = Extract<firestore.WhereFilterOp, "<" | "<=" | ">" | ">=">;
-type NotOp = Extract<firestore.WhereFilterOp, "not-in" | "!=">;
 
 type Repeat<T> = [] | [T] | [T, T] | [T, T, T];
 
-export type AllowedConstraints<T extends DocumentData> = {
-  [K in string & keyof T]: readonly [
-    ...([] | [WhereConstraint<K, NotOp>]),
-    ...(
-      | []
-      | [WhereConstraint<K, "array-contains">]
-      | [WhereConstraint<K, "array-contains-any">]
-      | [WhereConstraint<K, "in">]
-    ),
-    ...Repeat<WhereConstraint<K, CompareOp>>,
-    ...Repeat<WhereConstraint<string & keyof T, "==">>,
-    ...Repeat<OrderByConstraint<K>>,
-    ...OtherConstraints[]
-  ];
-}[string & keyof T];
+export type OrConstraints<T extends DocumentData> = [
+  ...(keyof T extends infer L
+    ? L extends string
+      ? T[L] extends any[]
+        ? [
+            | WhereConstraint<L, "in" | "not-in", T[L][]>
+            | WhereConstraint<L, "array-contains-any", T[L]>
+          ]
+        : [WhereConstraint<L, "in" | "not-in", T[L][]>]
+      : []
+    : [])
+];
+
+export type AllowedConstraints<
+  T extends DocumentData,
+  Or extends OrConstraints<T> = OrConstraints<T>
+> = keyof T extends infer K
+  ? K extends string
+    ? readonly [
+        ...([] | Or),
+        ...(
+          | (keyof Or extends infer I
+              ? I extends number
+                ? ([
+                    WhereConstraint<any, "array-contains-any", any>
+                  ] extends Or[I]
+                    ? [WhereConstraint<K, "!=", T[K][]>]
+                    : [WhereConstraint<any, "not-in", any>] extends Or[I]
+                    ? [WhereConstraint<K, "array-contains", T[K]>]
+                    : [
+                        WhereConstraint<K, "array-contains", T[K]>,
+                        WhereConstraint<K, "!=", T[K][]>
+                      ])
+                : []
+              : [])
+          | []
+        ),
+        ...Repeat<WhereConstraint<K, CompareOp, T[K]>>,
+        ...Repeat<
+          keyof T extends infer L
+            ? L extends string
+              ? WhereConstraint<L, "==", T[L]>
+              : never
+            : never
+        >,
+        ...(
+          | [OrderByConstraint<K>, ...OrderByConstraint<keyof T & string>[]]
+          | []
+        ),
+        ...OtherConstraints[]
+      ]
+    : readonly []
+  : readonly [];
 
 export const query = <T extends DocumentData>(
   query: firestore.Query<T>,
