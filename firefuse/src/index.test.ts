@@ -59,6 +59,8 @@ type Assert<T extends true> = T;
 
 const collection = fuse.collection<MySchema>();
 const doc = fuse.doc<MySchema>();
+const { query } = fuse;
+
 afterAll(async () => {
   await fs.terminate(DB);
 });
@@ -174,42 +176,38 @@ describe("read data once", () => {
     expect(docSnap.exists()).toBeTruthy();
   });
   describe("where", () => {
-    test("get cities where(capital, ==, true)", async () => {
-      const where = fuse.where<City>();
-      const q: fs.Query<City> = fs.query(
-        collection(DB, "cities"),
-        where("capital", "==", true)
-      );
+    type Constraints = fuse.AllowedConstraints<City>;
+    const where = fuse.where<City>();
+
+    test("where(capital, ==, true) is OK", async () => {
+      const c = where("capital", "==", true);
+      type _ = Assert<Extends<Constraints, [typeof c]>>;
+
+      const q: fs.Query<City> = query(collection(DB, "cities"), c);
 
       const querySnapshot = await fs.getDocs(q);
       querySnapshot.forEach((doc) => {
         expect(doc.data()).toEqual(addDataEntries[doc.id]);
       });
     });
-
-    test(`get cities where("regions", "array-contains", "west_coast")`, async () => {
-      const where = fuse.where<City>();
-      const _: { type: "where" } = where(
-        "regions",
-        "array-contains",
-        "west_coast"
-      );
-      const q: fs.Query<City> = fs.query(
-        collection(DB, "cities"),
-        where("regions", "array-contains", "west_coast")
-      );
+    test(`where("regions", "array-contains", "west_coast") is OK`, async () => {
+      const c = where("regions", "array-contains", "west_coast");
+      type _ = Assert<
+        Extends<{ _field: string; _op: string; _value: any }, typeof c>
+      >;
+      type CC = fuse.OrConstraints<City>
+      const C: Constraints = [c] as const;
+      type __ = Assert<Extends<Constraints, [typeof c]>>;
+      const q: fs.Query<City> = query(collection(DB, "cities"), c);
       const docs = await fs.getDocs(q);
       expect(
         docs.docs.every((doc) => doc.data().regions.includes("west_coast"))
       ).toBeTruthy();
     });
 
-    test(`get cities where("country", "in", ["USA", "Japan"]) `, async () => {
-      const where = fuse.where<City>();
-      const q: fs.Query<City> = fs.query(
-        collection(DB, "cities"),
-        where("country", "in", ["USA", "Japan"])
-      );
+    test(`where("country", "in", ["USA", "Japan"]) is OK`, async () => {
+      const c = where("country", "in", ["USA", "Japan"]);
+      const q: fs.Query<City> = query(collection(DB, "cities"), c);
       const querySS = await fs.getDocs(q);
       querySS.forEach((ss) => {
         expect(["USA", "Japan"]).toContain(ss.data().country);
@@ -217,7 +215,6 @@ describe("read data once", () => {
     });
 
     test(`get cities where("country", "not-in", ["USA", "Japan"])`, async () => {
-      const where = fuse.where<City>();
       const q: fs.Query<City> = fs.query(
         collection(DB, "cities"),
         where("country", "not-in", ["USA", "Japan"])
@@ -229,8 +226,7 @@ describe("read data once", () => {
     });
 
     test(`get cities where("regions", "array-contains-any", ["west_coast", "east_coast"])`, async () => {
-      const where = fuse.where<City>();
-      const q: fs.Query<City> = fs.query(
+      const q: fs.Query<City> = query(
         collection(DB, "cities"),
         where("regions", "array-contains-any", ["west_coast", "east_coast"])
       );
@@ -347,7 +343,7 @@ describe("read data once", () => {
     const citiesRef: fs.CollectionReference<City> = collection(DB, "cities");
     const orderBy = fuse.orderBy<City>();
     test(`get cities orderBy("population")`, async () => {
-      const q = fs.query(citiesRef, orderBy("population"));
+      const q = query(citiesRef, orderBy("population"));
       const querySS = await fs.getDocs(q);
       let prev = 0;
       querySS.forEach((ss) => {
@@ -378,7 +374,7 @@ describe("multple queries", () => {
   const orderBy = fuse.orderBy<City>();
   type Constraints = fuse.AllowedConstraints<City>;
 
-  test("population > 10000 & state == CA is valid", () => {
+  test("> & == is valid", () => {
     const constraints: Constraints = [
       where("population", ">", 10000),
       where("state", "==", "CA"),
@@ -386,7 +382,7 @@ describe("multple queries", () => {
     type _ = Assert<Extends<Constraints, typeof constraints>>;
   });
 
-  test("== && > is not valid", () => {
+  test("== & > is not valid", () => {
     const constraints = [
       where("state", "==", "CA"),
       where("population", ">", 10000),
@@ -394,7 +390,7 @@ describe("multple queries", () => {
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
   });
 
-  test("!= && not-in is not valid", () => {
+  test("!= & not-in is not valid", () => {
     const constraints = [
       where("state", "!=", "CA"),
       where("state", "not-in", ["ABC"]),
@@ -402,9 +398,8 @@ describe("multple queries", () => {
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
   });
 
-  test("not-in && in && >= && == && orderBy && ...otherConstraints is valid", () => {
-    const constraints = [
-      where("state", "not-in", ["ABC"]),
+  test("not-in & in & >= & == && orderBy && ...otherConstraints is valid", () => {
+    const constraints: Constraints = [
       where("state", "in", ["CA"]),
       where("state", ">=", "ABC"),
       where("capital", "==", true),
@@ -419,7 +414,7 @@ describe("multple queries", () => {
     type _ = Assert<Extends<Constraints, typeof constraints>>;
   });
 
-  test("state >= CA & population > 10000 is not valid", () => {
+  test("state >= A & population > B is NG", () => {
     const constraints = [
       where("state", ">=", "CA"),
       where("population", ">", 100000),
@@ -427,7 +422,7 @@ describe("multple queries", () => {
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
   });
 
-  test("!= should be first", () => {
+  test(">= & != is NG", () => {
     const constraints = [
       where("state", ">=", "CA"),
       where("capital", "!=", true),
@@ -435,7 +430,7 @@ describe("multple queries", () => {
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
   });
 
-  test("not-in should be first", () => {
+  test(">= & not-in is NG", () => {
     const constraints = [
       where("state", ">=", "CA"),
       where("state", "not-in", ["CA"]),
@@ -443,7 +438,7 @@ describe("multple queries", () => {
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
   });
 
-  test("4 compare is not valid", () => {
+  test(">= & >= & >= & >= is NG", () => {
     const constraints = [
       where("state", ">=", "CA"),
       where("state", ">=", "CA"),
@@ -453,8 +448,48 @@ describe("multple queries", () => {
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
   });
 
-  test("1 compare is valid", () => {
+  test(">= is OK", () => {
     const constraints = [where("state", ">=", "CA")] as const;
     type _ = Assert<Extends<Constraints, typeof constraints>>;
+  });
+
+  test("not-in & in is NG", () => {
+    const constraints = [
+      where("name", "not-in", ["A", "B"]),
+      where("name", "in", ["A", "B"]),
+    ] as const;
+    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+  });
+
+  test("in & arr-contains-any is NG", () => {
+    const constraints = [
+      where("name", "in", ["A", "B"]),
+      where("regions", "array-contains-any", ["A", "B"]),
+    ] as const;
+    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+  });
+
+  test("not-in & arr-contains-any is NG", () => {
+    const constraints = [
+      where("name", "not-in", ["A", "B"]),
+      where("regions", "array-contains-any", ["A", "B"]),
+    ] as const;
+    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+  });
+
+  test("arr-con-any & arr-con is NG", () => {
+    const constraints = [
+      where("regions", "array-contains-any", ["A", "B"]),
+      where("regions", "array-contains", "A"),
+    ] as const;
+    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+  });
+
+  test("arr-con & arr-con is NG", () => {
+    const constraints = [
+      where("regions", "array-contains-any", ["A", "B"]),
+      where("regions", "array-contains", "A"),
+    ] as const;
+    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
   });
 });
