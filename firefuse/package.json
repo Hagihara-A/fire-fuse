@@ -3,6 +3,7 @@
   "version": "1.1.1",
   "description": "Definitely typed utilities for firestore",
   "type": "module",
+  "repository": "https://github.com/Hagihara-A/fire-fuse",
   "scripts": {
     "test": "jest",
     "build": "tsc",
