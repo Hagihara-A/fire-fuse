@@ -68,7 +68,7 @@ afterAll(async () => {
 test("confirm is emulator running", async () => {
   const colRef = fs.collection(DB, "a/b/c");
   expect(colRef.id).toBe("c");
-  expect(colRef.parent.parent.id).toBe("a");
+  expect(colRef.parent?.parent.id).toBe("a");
   const data = { test: "test" };
   const doc = await fs.addDoc(colRef, data);
 
@@ -211,7 +211,7 @@ describe("read data once", () => {
       const q: fs.Query<City> = query(collection(DB, "cities"), w);
       const docs = await fs.getDocs(q);
       expect(
-        docs.docs.every((doc) => doc.data().regions.includes("west_coast"))
+        docs.docs.every((doc) => doc.data().regions?.includes("west_coast"))
       ).toBeTruthy();
     });
 
@@ -244,7 +244,7 @@ describe("read data once", () => {
       querySS.forEach((ss) => {
         const regions = ss.data().regions;
         expect(
-          regions.includes("west_coast") || regions.includes("east_coast")
+          regions?.includes("west_coast") || regions?.includes("east_coast")
         ).toBeTruthy();
       });
     });
@@ -260,7 +260,7 @@ describe("read data once", () => {
       querySS.forEach((ss) => {
         const population = ss.data().population;
         expect(population).toBeGreaterThanOrEqual(prev);
-        prev = population;
+        prev = population ?? prev;
       });
     });
 
@@ -274,7 +274,7 @@ describe("read data once", () => {
       querySS.forEach((ss) => {
         const population = ss.data().population;
         expect(population).toBeLessThanOrEqual(prev);
-        prev = population;
+        prev = population ?? prev;
       });
     });
   });

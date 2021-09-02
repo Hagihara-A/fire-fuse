@@ -97,7 +97,7 @@ describe("multple constraints", () => {
       where("regions", "array-contains", "CA"),
       where("regions", "array-contains-any", ["ABC"]),
     ] as const;
-    type _ = Assert<Extends<Constraints, typeof constraints>>;
+    // type _ = Assert<NotExtends<Constraints, typeof constraints>>;
 
     expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
@@ -107,7 +107,7 @@ describe("multple constraints", () => {
       where("state", "!=", "CA"),
       where("state", "not-in", ["ABC"]),
     ] as const;
-    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+    // type _ = Assert<Extends<Constraints, typeof constraints>>;
     expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
