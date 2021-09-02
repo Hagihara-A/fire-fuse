@@ -10,7 +10,7 @@ export type FieldType =
   | DocumentData;
 
 export interface DocumentData {
-  readonly [K: string]: FieldType;
+  readonly [K: string]: FieldType | undefined;
 }
 
 export type StrKeyof<T> = keyof T & string;
@@ -152,7 +152,7 @@ export const where = <T extends DocumentData>() => {
   return <
     F extends StrKeyof<T>,
     OP extends LegalOperation<T, F>,
-    V extends LegalValue<T, F, OP>
+    V extends ExcUndef<LegalValue<T, F, OP>>
   >(
     field: F,
     op: OP,
@@ -175,47 +175,51 @@ export const orderBy = <T extends DocumentData>() => {
 
 type UnPrimitive = DocumentData | FieldType[];
 type CommonOp = Extract<firestore.WhereFilterOp, "in" | "not-in" | "==" | "!=">;
-type CompareOp = Extract<firestore.WhereFilterOp, "<" | "<=" | ">" | ">=">;
+type ExcUndef<T> = Exclude<T, undefined>;
+type GreaterOrLesserOp = Extract<
+  firestore.WhereFilterOp,
+  "<" | "<=" | ">" | ">="
+>;
 export type LegalValue<
   T extends DocumentData,
   F extends StrKeyof<T>,
   OP extends firestore.WhereFilterOp
 > = OP extends "!=" | "=="
-  ? T[F]
+  ? ExcUndef<T[F]>
   : OP extends "in" | "not-in"
-  ? T[F][]
-  : OP extends "<" | "<=" | ">" | ">="
-  ? T[F] extends UnPrimitive
+  ? ExcUndef<T[F]>[]
+  : OP extends GreaterOrLesserOp
+  ? T[F] extends UnPrimitive | undefined
     ? never
-    : T[F]
+    : ExcUndef<T[F]>
   : OP extends "array-contains-any"
-  ? T[F] extends any[]
+  ? T[F] extends FieldType[] | undefined
     ? T[F]
     : never
   : OP extends "array-contains"
-  ? T[F] extends any[]
-    ? T[F][number]
+  ? T[F] extends (infer E)[] | undefined
+    ? E
     : never
   : never;
 
 type LegalOperation<T extends DocumentData, F extends StrKeyof<T>> =
   | (T[F] extends DocumentData
       ? never
-      : T[F] extends unknown[]
+      : Exclude<T[F], undefined> extends FieldType[]
       ? ArrayOp
-      : CompareOp)
+      : GreaterOrLesserOp)
   | CommonOp;
 
 export interface WhereConstraint<
   T extends DocumentData,
   F extends StrKeyof<T>,
   OP extends LegalOperation<T, F>,
-  V extends LegalValue<T, F, OP>
+  V extends LegalValue<T, F, OP> | undefined
 > extends firestore.QueryConstraint {
   readonly type: Extract<firestore.QueryConstraintType, "where">;
   _field: F;
   _op: OP;
-  _value: V;
+  _value: ExcUndef<V>;
 }
 
 export interface OrderByConstraint<F extends string>
