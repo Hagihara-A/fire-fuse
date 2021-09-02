@@ -24,7 +24,7 @@
   },
   "private": true,
   "lint-staged": {
-    "*.{md,json}": [
+    "*.{md,json,yml}": [
       "prettier --write"
     ]
   }
