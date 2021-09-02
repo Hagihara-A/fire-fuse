@@ -69,6 +69,14 @@ describe("single constraint is OK", () => {
 describe("multple constraints", () => {
   type Constraints = fuse.AllowedConstraints<City>;
 
+  test("== & == is OK", () => {
+    const constraints = [
+      where("state", "==", "CA"),
+      where("population", "==", 10000),
+    ] as const;
+    type _ = Assert<Extends<Constraints, typeof constraints>>;
+  });
+
   test(" == & >  is OK", () => {
     const constraints: Constraints = [
       where("state", "==", "CA"),
