@@ -234,18 +234,21 @@ export interface OtherConstraints extends firestore.QueryConstraint {
 
 type Repeat<T> = [] | [T] | [T, T] | [T, T, T];
 
-export type OrConstraints<T extends DocumentData, K extends StrKeyof<T>> = {
-  [L in StrKeyof<T>]:
-    | (T[L] extends DocumentData
-        ? never
+export type OrConstraints<T extends DocumentData, K extends StrKeyof<T>> =
+  | {
+      [L in StrKeyof<T>]:
+        | (T[L] extends DocumentData
+            ? never
             : T[L] extends FieldType[]
             ? "array-contains-any" extends LegalOperation<T, L>
-          ? WhereConstraint<T, L, "array-contains-any", T[L]>
-          : never
-        : never)
-    | WhereConstraint<T, L, "in", T[L][]>
-    | WhereConstraint<T, K, "not-in", T[K][]>;
-}[StrKeyof<T>];
+              ? T[L] extends LegalValue<T, L, "array-contains-any">
+                ? WhereConstraint<T, L, "array-contains-any", T[L]>
+                : never
+              : never
+            : never)
+        | WhereConstraint<T, L, "in", ExcUndef<T[L]>[]>;
+    }[StrKeyof<T>]
+  | WhereConstraint<T, K, "not-in", ExcUndef<T[K]>[]>;
 
 export type AllowedConstraints<T extends DocumentData> = {
   [K in StrKeyof<T>]: readonly [
