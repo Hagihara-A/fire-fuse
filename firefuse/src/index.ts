@@ -247,9 +247,9 @@ export type AllowedConstraints<T extends DocumentData> = {
       | []
       | {
           [L in StrKeyof<T>]: "array-contains" extends LegalOperation<T, L>
-            ? number extends keyof T[L]
-              ? T[L][number] extends LegalValue<T, L, "array-contains">
-                ? [WhereConstraint<T, L, "array-contains", T[L][number]>]
+            ? T[L] extends (infer E)[] | undefined
+              ? E extends LegalValue<T, L, "array-contains">
+                ? [WhereConstraint<T, L, "array-contains", E>]
                 : []
               : []
             : [];
