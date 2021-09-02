@@ -10,7 +10,7 @@ export type FieldType =
   | DocumentData;
 
 export interface DocumentData {
-  readonly [K: string]: FieldType;
+  readonly [K: string]: FieldType | undefined;
 }
 
 export type StrKeyof<T> = keyof T & string;
@@ -114,29 +114,9 @@ export type UpdateKeys<T extends DocumentData> = Join<
   DeepKeys<T> extends string[] ? DeepKeys<T> : never
 >;
 
-type UpdateData<
-  T extends DocumentData,
-  U extends UpdateKeys<T> = UpdateKeys<T>
-> = {
-  [K in U]?: K extends `${infer H}.${infer Rest}`
-    ? T[H] extends DocumentData
-      ? Rest extends UpdateKeys<T[H]>
-        ? UpdateData<T[H], Rest>[Rest]
-        : never
-      : never
-    : K extends keyof T
-    ? T[K] | firestore.FieldValue
-    : never;
-};
-
 export type DeepPartial<T extends DocumentData> = {
   [K in keyof T]?: T[K] extends DocumentData ? DeepPartial<T[K]> : T[K];
 };
-
-const updateDoc = <T extends DocumentData>(
-  doc: firestore.DocumentReference<T>,
-  data: UpdateData<T> | DeepPartial<T>
-) => firestore.updateDoc(doc, data as any);
 
 export type ArrayOp = Extract<
   firestore.WhereFilterOp,
@@ -152,7 +132,7 @@ export const where = <T extends DocumentData>() => {
   return <
     F extends StrKeyof<T>,
     OP extends LegalOperation<T, F>,
-    V extends LegalValue<T, F, OP>
+    V extends ExcUndef<LegalValue<T, F, OP>>
   >(
     field: F,
     op: OP,
@@ -164,7 +144,7 @@ export type KeyofPrimitive<
   T extends DocumentData,
   K extends keyof T = keyof T
 > = {
-  [L in K]: T[L] extends any[] | DocumentData ? never : L;
+  [L in K]: T[L] extends FieldType[] | DocumentData ? never : L;
 }[K];
 export const orderBy = <T extends DocumentData>() => {
   return <F extends KeyofPrimitive<T> & string>(
@@ -175,47 +155,51 @@ export const orderBy = <T extends DocumentData>() => {
 
 type UnPrimitive = DocumentData | FieldType[];
 type CommonOp = Extract<firestore.WhereFilterOp, "in" | "not-in" | "==" | "!=">;
-type CompareOp = Extract<firestore.WhereFilterOp, "<" | "<=" | ">" | ">=">;
+type ExcUndef<T> = Exclude<T, undefined>;
+type GreaterOrLesserOp = Extract<
+  firestore.WhereFilterOp,
+  "<" | "<=" | ">" | ">="
+>;
 export type LegalValue<
   T extends DocumentData,
   F extends StrKeyof<T>,
   OP extends firestore.WhereFilterOp
 > = OP extends "!=" | "=="
-  ? T[F]
+  ? ExcUndef<T[F]>
   : OP extends "in" | "not-in"
-  ? T[F][]
-  : OP extends "<" | "<=" | ">" | ">="
-  ? T[F] extends UnPrimitive
+  ? ExcUndef<T[F]>[]
+  : OP extends GreaterOrLesserOp
+  ? T[F] extends UnPrimitive | undefined
     ? never
-    : T[F]
+    : ExcUndef<T[F]>
   : OP extends "array-contains-any"
-  ? T[F] extends any[]
+  ? T[F] extends FieldType[] | undefined
     ? T[F]
     : never
   : OP extends "array-contains"
-  ? T[F] extends any[]
-    ? T[F][number]
+  ? T[F] extends (infer E)[] | undefined
+    ? E
     : never
   : never;
 
 type LegalOperation<T extends DocumentData, F extends StrKeyof<T>> =
   | (T[F] extends DocumentData
       ? never
-      : T[F] extends unknown[]
+      : Exclude<T[F], undefined> extends FieldType[]
       ? ArrayOp
-      : CompareOp)
+      : GreaterOrLesserOp)
   | CommonOp;
 
 export interface WhereConstraint<
   T extends DocumentData,
   F extends StrKeyof<T>,
   OP extends LegalOperation<T, F>,
-  V extends LegalValue<T, F, OP>
+  V extends LegalValue<T, F, OP> | undefined
 > extends firestore.QueryConstraint {
   readonly type: Extract<firestore.QueryConstraintType, "where">;
   _field: F;
   _op: OP;
-  _value: V;
+  _value: ExcUndef<V>;
 }
 
 export interface OrderByConstraint<F extends string>
@@ -230,34 +214,42 @@ export interface OtherConstraints extends firestore.QueryConstraint {
 
 type Repeat<T> = [] | [T] | [T, T] | [T, T, T];
 
-export type OrConstraints<T extends DocumentData, K extends StrKeyof<T>> = {
-  [L in StrKeyof<T>]:
-    | (T[L] extends DocumentData
-        ? never
-        : T[L] extends unknown[]
-        ? "array-contains-any" extends LegalOperation<T, L>
-          ? WhereConstraint<T, L, "array-contains-any", T[L]>
-          : never
-        : never)
-    | WhereConstraint<T, L, "in", T[L][]>
-    | WhereConstraint<T, K, "not-in", T[K][]>;
-}[StrKeyof<T>];
+export type OrConstraints<
+  T extends DocumentData,
+  NotInKey extends StrKeyof<T>
+> =
+  | {
+      [L in StrKeyof<T>]:
+        | (T[L] extends DocumentData | undefined
+            ? never
+            : T[L] extends FieldType[] | undefined
+            ? "array-contains-any" extends LegalOperation<T, L>
+              ? T[L] extends LegalValue<T, L, "array-contains-any"> | undefined
+                ? WhereConstraint<T, L, "array-contains-any", ExcUndef<T[L]>>
+                : never
+              : never
+            : never)
+        | WhereConstraint<T, L, "in", ExcUndef<T[L]>[]>;
+    }[StrKeyof<T>]
+  | WhereConstraint<T, NotInKey, "not-in", ExcUndef<T[NotInKey]>[]>;
 
 export type AllowedConstraints<T extends DocumentData> = {
   [K in StrKeyof<T>]: readonly [
-    ...{
-      [L in StrKeyof<T>]: Repeat<WhereConstraint<T, L, "==", T[L]>>;
-    }[StrKeyof<T>],
-    ...(CompareOp | "!=" extends LegalOperation<T, K>
-      ? Repeat<WhereConstraint<T, K, CompareOp | "!=", T[K]>>
+    ...Repeat<
+      {
+        [L in StrKeyof<T>]: WhereConstraint<T, L, "==", ExcUndef<T[L]>>;
+      }[StrKeyof<T>]
+    >,
+    ...(GreaterOrLesserOp | "!=" extends LegalOperation<T, K>
+      ? Repeat<WhereConstraint<T, K, GreaterOrLesserOp | "!=", T[K]>>
       : []),
     ...(
       | []
       | {
           [L in StrKeyof<T>]: "array-contains" extends LegalOperation<T, L>
-            ? number extends keyof T[L]
-              ? T[L][number] extends LegalValue<T, L, "array-contains">
-                ? [WhereConstraint<T, L, "array-contains", T[L][number]>]
+            ? T[L] extends (infer E)[] | undefined
+              ? E extends LegalValue<T, L, "array-contains">
+                ? [WhereConstraint<T, L, "array-contains", E>]
                 : []
               : []
             : [];

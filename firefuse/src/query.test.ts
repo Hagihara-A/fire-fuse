@@ -1,3 +1,4 @@
+import * as fs from "firebase/firestore";
 import * as fuse from ".";
 import {
   City,
@@ -11,10 +12,11 @@ import {
 const where = fuse.where<City>();
 const orderBy = fuse.orderBy<City>();
 const cities = collection(DB, "cities");
-describe("single query", () => {
+
+describe("single constraint is OK", () => {
   type Constraints = fuse.AllowedConstraints<City>;
-  test("no query is OK", () => {
-    fuse.query(cities);
+  test("no constraint is OK", () => {
+    type _ = Assert<Extends<Constraints, []>>;
   });
 
   test("== is OK", () => {
@@ -63,10 +65,18 @@ describe("single query", () => {
   });
 });
 
-describe("multple queries", () => {
+describe("multple constraints", () => {
   type Constraints = fuse.AllowedConstraints<City>;
 
-  test(" == & >  is valid", () => {
+  test("== & == is OK", () => {
+    const constraints = [
+      where("state", "==", "CA"),
+      where("population", "==", 10000),
+    ] as const;
+    type _ = Assert<Extends<Constraints, typeof constraints>>;
+  });
+
+  test(" == & >  is OK", () => {
     const constraints: Constraints = [
       where("state", "==", "CA"),
       where("population", ">", 10000),
@@ -74,7 +84,7 @@ describe("multple queries", () => {
     type _ = Assert<Extends<Constraints, typeof constraints>>;
   });
 
-  test("== & > is not valid", () => {
+  test("== & > is NG", () => {
     const constraints = [
       where("state", "==", "CA"),
       where("population", ">", 10000),
@@ -82,14 +92,24 @@ describe("multple queries", () => {
     type _ = Assert<Extends<Constraints, typeof constraints>>;
   });
 
-  // known bug, not implemented
-  // test("!= & not-in is not valid", () => {
-  //   const constraints = [
-  //     where("state", "!=", "CA"),
-  //     where("state", "not-in", ["ABC"]),
-  //   ] as const;
-  //   type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-  // });
+  test("TODO: arr-con & arr-con-any is NG", () => {
+    const constraints = [
+      where("regions", "array-contains", "CA"),
+      where("regions", "array-contains-any", ["ABC"]),
+    ] as const;
+    // type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
+  });
+
+  test("TODO: != & not-in is NG", () => {
+    const constraints = [
+      where("state", "!=", "CA"),
+      where("state", "not-in", ["ABC"]),
+    ] as const;
+    // type _ = Assert<Extends<Constraints, typeof constraints>>;
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
+  });
 
   test("not-in & in & >= & == && orderBy && ...otherConstraints is valid", () => {
     const constraints: Constraints = [
@@ -113,6 +133,7 @@ describe("multple queries", () => {
       where("population", ">", 100000),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test(">= & != is NG", () => {
@@ -121,14 +142,16 @@ describe("multple queries", () => {
       where("capital", "!=", true),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test(">= & not-in is NG", () => {
     const constraints = [
-      where("state", ">=", "CA"),
+      where("population", ">=", 123),
       where("state", "not-in", ["CA"]),
     ] as const;
-    type _ = Assert<Extends<Constraints, typeof constraints>>;
+    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test(">= & >= & >= & >= is NG", () => {
@@ -152,6 +175,7 @@ describe("multple queries", () => {
       where("name", "in", ["A", "B"]),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test("in & arr-contains-any is NG", () => {
@@ -160,6 +184,7 @@ describe("multple queries", () => {
       where("regions", "array-contains-any", ["A", "B"]),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test("not-in & arr-contains-any is NG", () => {
@@ -168,6 +193,7 @@ describe("multple queries", () => {
       where("regions", "array-contains-any", ["A", "B"]),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test("arr-con-any & arr-con is NG", () => {
@@ -176,6 +202,7 @@ describe("multple queries", () => {
       where("regions", "array-contains", "A"),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test("arr-con & arr-con is NG", () => {
@@ -184,6 +211,7 @@ describe("multple queries", () => {
       where("regions", "array-contains", "A"),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test(`population <= 123 & name not-in ["USA"] is NG`, () => {
@@ -192,6 +220,7 @@ describe("multple queries", () => {
       where("name", "not-in", ["USA"]),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test("population > 123 & orderBy(population) is OK", () => {
@@ -208,6 +237,7 @@ describe("multple queries", () => {
       orderBy("name"),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test(`where(name), orderBy(name), orderBy(population) is OK`, () => {

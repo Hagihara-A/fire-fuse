@@ -68,7 +68,7 @@ afterAll(async () => {
 test("confirm is emulator running", async () => {
   const colRef = fs.collection(DB, "a/b/c");
   expect(colRef.id).toBe("c");
-  expect(colRef.parent.parent.id).toBe("a");
+  expect(colRef.parent?.parent.id).toBe("a");
   const data = { test: "test" };
   const doc = await fs.addDoc(colRef, data);
 
@@ -181,21 +181,6 @@ describe("read data once", () => {
     type Constraints = fuse.AllowedConstraints<City>;
     const where = fuse.where<City>();
 
-    test("OrConstraints: array-contains-any appear only in array field", () => {
-      type Model = {
-        A: string[];
-        B: number;
-      };
-      type E =
-        | fuse.WhereConstraint<Model, "A", "array-contains-any", string[]>
-        | fuse.WhereConstraint<Model, "A", "in", string[][]>
-        | fuse.WhereConstraint<Model, "B", "in", number[]>
-        | fuse.WhereConstraint<Model, "B", "not-in", number[]>;
-      type A = fuse.OrConstraints<Model, "B">;
-
-      type _ = Assert<Extends<E, A>>;
-    });
-
     test("use fuse.where with firestore.query", () => {
       fs.query(collection(DB, "user"), where("capital", "==", true));
     });
@@ -214,7 +199,7 @@ describe("read data once", () => {
     test(`where("regions", "array-contains", "west_coast") is OK`, async () => {
       const w = where("regions", "array-contains", "west_coast");
       type _ = Assert<
-        Extends<{ _field: string; _op: string; _value: any }, typeof w>
+        Extends<{ _field: string; _op: string; _value: string }, typeof w>
       >;
       type __ = Assert<
         Extends<
@@ -226,7 +211,7 @@ describe("read data once", () => {
       const q: fs.Query<City> = query(collection(DB, "cities"), w);
       const docs = await fs.getDocs(q);
       expect(
-        docs.docs.every((doc) => doc.data().regions.includes("west_coast"))
+        docs.docs.every((doc) => doc.data().regions?.includes("west_coast"))
       ).toBeTruthy();
     });
 
@@ -259,109 +244,10 @@ describe("read data once", () => {
       querySS.forEach((ss) => {
         const regions = ss.data().regions;
         expect(
-          regions.includes("west_coast") || regions.includes("east_coast")
+          regions?.includes("west_coast") || regions?.includes("east_coast")
         ).toBeTruthy();
       });
     });
-  });
-
-  test("create nested document & read it", async () => {
-    const docRef: fs.DocumentReference<Payment> = doc(
-      DB,
-      "user",
-      "a",
-      "payment",
-      "b"
-    );
-    expect(docRef.id).toBe("b");
-
-    const data = { cardNumber: 1234 };
-    await fs.setDoc(docRef, data);
-
-    const savedDoc = await fs.getDoc(docRef);
-    expect(savedDoc.data()).toEqual(data);
-  });
-
-  test("update nested doc partially", async () => {
-    const docRef: fs.DocumentReference<C3> = doc(
-      DB,
-      "C1",
-      "c1",
-      "C2",
-      "c2",
-      "C3",
-      "c3"
-    );
-    expect(docRef.id).toBe("c3");
-
-    const data = {
-      c3: "c3",
-      c31: { c32: { c33: "c33", c33_2: 123 } },
-    };
-    await fs.setDoc(docRef, data);
-    await fs.updateDoc(docRef, { "c31.c32.c33": "update" });
-    const updatedData = (await fs.getDoc(docRef)).data();
-    const expectedData: C3 = {
-      c3: "c3",
-      c31: { c32: { c33: "update", c33_2: 123 } },
-    };
-    expect(updatedData).toEqual(expectedData);
-  });
-
-  test("overwrite nested value", async () => {
-    const docRef: fs.DocumentReference<C3> = doc(
-      DB,
-      "C1",
-      "c1",
-      "C2",
-      "c2",
-      "C3",
-      "c3"
-    );
-    expect(docRef.id).toBe("c3");
-
-    const data = {
-      c3: "c3",
-      c31: { c32: { c33: "c33", c33_2: 123 } },
-    };
-    await fs.setDoc(docRef, data);
-    await fs.updateDoc(docRef, {
-      c31: { c32: { c33: "update", c33_2: 321 } },
-    });
-    const updatedData = (await fs.getDoc(docRef)).data();
-    const expectedData: C3 = {
-      c3: "c3",
-      c31: { c32: { c33: "update", c33_2: 321 } },
-    };
-    expect(updatedData).toEqual(expectedData);
-  });
-
-  test("disapper unspecified value of nested object", async () => {
-    const docRef: fs.DocumentReference<C3> = doc(
-      DB,
-      "C1",
-      "c1",
-      "C2",
-      "c2",
-      "C3",
-      "c3"
-    );
-    expect(docRef.id).toBe("c3");
-
-    const data = {
-      c3: "c3",
-      c31: { c32: { c33: "c33", c33_2: 123 } },
-    };
-    await fs.setDoc(docRef, data);
-    await fs.updateDoc(docRef, {
-      c31: { c32: { c33: "update" } },
-    });
-    const updatedData = (await fs.getDoc(docRef)).data();
-    const expectedData: C3 = {
-      c3: "c3",
-      c31: { c32: { c33: "update", c33_2: undefined } },
-    };
-    expect(updatedData).toEqual(expectedData);
   });
 
   describe("orderBy", () => {
@@ -374,7 +260,7 @@ describe("read data once", () => {
       querySS.forEach((ss) => {
         const population = ss.data().population;
         expect(population).toBeGreaterThanOrEqual(prev);
-        prev = population;
+        prev = population ?? prev;
       });
     });
 
@@ -388,8 +274,65 @@ describe("read data once", () => {
       querySS.forEach((ss) => {
         const population = ss.data().population;
         expect(population).toBeLessThanOrEqual(prev);
-        prev = population;
+        prev = population ?? prev;
       });
     });
+  });
+});
+
+describe("LegalValue", () => {
+  test("(string | null)[] array-contains string | null", () => {
+    type T = {
+      a: (string | null)[];
+    };
+    type W = fuse.LegalValue<T, "a", "array-contains">;
+    type _ = Assert<Extends<T["a"][number], W>>;
+  });
+  test("(string | null)[]| undefined array-contains string | null", () => {
+    type T = {
+      a?: (string | null)[];
+    };
+    type W = fuse.LegalValue<T, "a", "array-contains">;
+    type _ = Assert<Extends<string | null, W>>;
+  });
+
+  test("string | null", () => {
+    type V = fuse.LegalValue<City, "state", "==">;
+    type _ = Assert<Extends<string | null, V>>;
+  });
+});
+
+describe("OrConstraints", () => {
+  test("array-contains-any appear only in array field", () => {
+    type Model = {
+      A: string[];
+      B: number;
+    };
+    type E =
+      | fuse.WhereConstraint<Model, "A", "array-contains-any", string[]>
+      | fuse.WhereConstraint<Model, "A", "in", string[][]>
+      | fuse.WhereConstraint<Model, "B", "in", number[]>
+      | fuse.WhereConstraint<Model, "B", "not-in", number[]>;
+    type A = fuse.OrConstraints<Model, "B">;
+
+    type _ = Assert<Extends<E, A>>;
+  });
+
+  test("remove undefined in optional field ", () => {
+    type Model = {
+      C?: ("a" | "b" | "v")[];
+    };
+    type E =
+      | fuse.WhereConstraint<
+          Model,
+          "C",
+          "array-contains-any",
+          ("a" | "b" | "v")[]
+        >
+      | fuse.WhereConstraint<Model, "C", "in", ("a" | "b" | "v")[][]>
+      | fuse.WhereConstraint<Model, "C", "not-in", ("a" | "b" | "v")[][]>;
+    type A = fuse.OrConstraints<Model, "C">;
+    type _ = Assert<Extends<E, A>>;
+    type __ = Assert<Extends<A, E>>;
   });
 });

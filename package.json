@@ -1,8 +1,12 @@
 {
+  "name": "firefuse",
   "scripts": {
     "emu": "firebase emulators:start --export-on-exit --import=emudata  --project hoge",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "test": "npm test --workspaces",
+    "test-on-emu": "npx firebase emulators:exec 'npm test'"
   },
+  "repository": "https://github.com/Hagihara-A/fire-fuse",
   "workspaces": [
     "firefuse"
   ],
@@ -21,7 +25,7 @@
   },
   "private": true,
   "lint-staged": {
-    "*.{md,json}": [
+    "*.{md,json,yml}": [
       "prettier --write"
     ]
   }
