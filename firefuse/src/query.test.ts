@@ -12,7 +12,6 @@ import {
 const where = fuse.where<City>();
 const orderBy = fuse.orderBy<City>();
 const cities = collection(DB, "cities");
-const query = fuse.query;
 
 describe("single constraint is OK", () => {
   type Constraints = fuse.AllowedConstraints<City>;
@@ -134,7 +133,7 @@ describe("multple constraints", () => {
       where("population", ">", 100000),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-    expect(() => fs.getDocs(query(cities, ...constraints))).toThrow();
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test(">= & != is NG", () => {
@@ -143,7 +142,7 @@ describe("multple constraints", () => {
       where("capital", "!=", true),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-    expect(() => fs.getDocs(query(cities, ...constraints))).toThrow();
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test(">= & not-in is NG", () => {
@@ -152,7 +151,7 @@ describe("multple constraints", () => {
       where("state", "not-in", ["CA"]),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-    expect(() => fs.getDocs(query(cities, ...constraints))).toThrow();
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test(">= & >= & >= & >= is NG", () => {
@@ -176,7 +175,7 @@ describe("multple constraints", () => {
       where("name", "in", ["A", "B"]),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-    expect(() => fs.getDocs(query(cities, ...constraints))).toThrow();
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test("in & arr-contains-any is NG", () => {
@@ -185,7 +184,7 @@ describe("multple constraints", () => {
       where("regions", "array-contains-any", ["A", "B"]),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-    expect(() => fs.getDocs(query(cities, ...constraints))).toThrow();
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test("not-in & arr-contains-any is NG", () => {
@@ -194,7 +193,7 @@ describe("multple constraints", () => {
       where("regions", "array-contains-any", ["A", "B"]),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-    expect(() => fs.getDocs(query(cities, ...constraints))).toThrow();
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test("arr-con-any & arr-con is NG", () => {
@@ -203,7 +202,7 @@ describe("multple constraints", () => {
       where("regions", "array-contains", "A"),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-    expect(() => fs.getDocs(query(cities, ...constraints))).toThrow();
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test("arr-con & arr-con is NG", () => {
@@ -212,7 +211,7 @@ describe("multple constraints", () => {
       where("regions", "array-contains", "A"),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-    expect(() => fs.getDocs(query(cities, ...constraints))).toThrow();
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test(`population <= 123 & name not-in ["USA"] is NG`, () => {
@@ -221,7 +220,7 @@ describe("multple constraints", () => {
       where("name", "not-in", ["USA"]),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-    expect(() => fs.getDocs(query(cities, ...constraints))).toThrow();
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test("population > 123 & orderBy(population) is OK", () => {
@@ -238,7 +237,7 @@ describe("multple constraints", () => {
       orderBy("name"),
     ] as const;
     type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-    expect(() => fs.getDocs(query(cities, ...constraints))).toThrow();
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
   });
 
   test(`where(name), orderBy(name), orderBy(population) is OK`, () => {
