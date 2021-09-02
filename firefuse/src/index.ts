@@ -114,29 +114,9 @@ export type UpdateKeys<T extends DocumentData> = Join<
   DeepKeys<T> extends string[] ? DeepKeys<T> : never
 >;
 
-type UpdateData<
-  T extends DocumentData,
-  U extends UpdateKeys<T> = UpdateKeys<T>
-> = {
-  [K in U]?: K extends `${infer H}.${infer Rest}`
-    ? T[H] extends DocumentData
-      ? Rest extends UpdateKeys<T[H]>
-        ? UpdateData<T[H], Rest>[Rest]
-        : never
-      : never
-    : K extends keyof T
-    ? T[K] | firestore.FieldValue
-    : never;
-};
-
 export type DeepPartial<T extends DocumentData> = {
   [K in keyof T]?: T[K] extends DocumentData ? DeepPartial<T[K]> : T[K];
 };
-
-const updateDoc = <T extends DocumentData>(
-  doc: firestore.DocumentReference<T>,
-  data: UpdateData<T> | DeepPartial<T>
-) => firestore.updateDoc(doc, data as any);
 
 export type ArrayOp = Extract<
   firestore.WhereFilterOp,
@@ -164,7 +144,7 @@ export type KeyofPrimitive<
   T extends DocumentData,
   K extends keyof T = keyof T
 > = {
-  [L in K]: T[L] extends any[] | DocumentData ? never : L;
+  [L in K]: T[L] extends FieldType[] | DocumentData ? never : L;
 }[K];
 export const orderBy = <T extends DocumentData>() => {
   return <F extends KeyofPrimitive<T> & string>(
