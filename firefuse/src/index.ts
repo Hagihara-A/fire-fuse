@@ -252,9 +252,11 @@ export type OrConstraints<T extends DocumentData, K extends StrKeyof<T>> =
 
 export type AllowedConstraints<T extends DocumentData> = {
   [K in StrKeyof<T>]: readonly [
-    ...{
-      [L in StrKeyof<T>]: Repeat<WhereConstraint<T, L, "==", T[L]>>;
-    }[StrKeyof<T>],
+    ...Repeat<
+      {
+        [L in StrKeyof<T>]: WhereConstraint<T, L, "==", ExcUndef<T[L]>>;
+      }[StrKeyof<T>]
+    >,
     ...(GreaterOrLesserOp | "!=" extends LegalOperation<T, K>
       ? Repeat<WhereConstraint<T, K, GreaterOrLesserOp | "!=", T[K]>>
       : []),
