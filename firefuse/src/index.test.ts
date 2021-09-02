@@ -181,21 +181,6 @@ describe("read data once", () => {
     type Constraints = fuse.AllowedConstraints<City>;
     const where = fuse.where<City>();
 
-    test("OrConstraints: array-contains-any appear only in array field", () => {
-      type Model = {
-        A: string[];
-        B: number;
-      };
-      type E =
-        | fuse.WhereConstraint<Model, "A", "array-contains-any", string[]>
-        | fuse.WhereConstraint<Model, "A", "in", string[][]>
-        | fuse.WhereConstraint<Model, "B", "in", number[]>
-        | fuse.WhereConstraint<Model, "B", "not-in", number[]>;
-      type A = fuse.OrConstraints<Model, "B">;
-
-      type _ = Assert<Extends<E, A>>;
-    });
-
     test("use fuse.where with firestore.query", () => {
       fs.query(collection(DB, "user"), where("capital", "==", true));
     });
@@ -391,5 +376,57 @@ describe("read data once", () => {
         prev = population;
       });
     });
+  });
+});
+
+describe("LegalValue", () => {
+  test("(string | null)[] array-contains string | null", () => {
+    type T = {
+      a: (string | null)[];
+    };
+    type W = fuse.LegalValue<T, "a", "array-contains">;
+    type _ = Assert<Extends<T["a"][number], W>>;
+  });
+  test("(string | null)[]| undefined array-contains string | null", () => {
+    type T = {
+      a?: (string | null)[];
+    };
+    type W = fuse.LegalValue<T, "a", "array-contains">;
+    type _ = Assert<Extends<string | null, W>>;
+  });
+
+  test("string | null", () => {
+    type V = fuse.LegalValue<City, "state", "==">;
+    type _ = Assert<Extends<string | null, V>>;
+  });
+});
+
+describe("OrConstraints", () => {
+  test("array-contains-any appear only in array field", () => {
+    type Model = {
+      A: string[];
+      B: number;
+    };
+    type E =
+      | fuse.WhereConstraint<Model, "A", "array-contains-any", string[]>
+      | fuse.WhereConstraint<Model, "A", "in", string[][]>
+      | fuse.WhereConstraint<Model, "B", "in", number[]>
+      | fuse.WhereConstraint<Model, "B", "not-in", number[]>;
+    type A = fuse.OrConstraints<Model, "B">;
+
+    type _ = Assert<Extends<E, A>>;
+  });
+
+  test("array-contains-any appear only in array field", () => {
+    type Model = {
+      C?: ("a" | "b" | "v")[];
+    };
+    type E =
+      | fuse.WhereConstraint<Model, "C", "array-contains", "a" | "b" | "v">
+      | fuse.WhereConstraint<Model, "C", "in", ("a" | "b" | "v")[][]>
+      | fuse.WhereConstraint<Model, "C", "not-in", ("a" | "b" | "v")[][]>;
+    type A = fuse.OrConstraints<Model, "C">;
+
+    type _ = Assert<Extends<E, A>>;
   });
 });
