@@ -199,7 +199,7 @@ describe("read data once", () => {
     test(`where("regions", "array-contains", "west_coast") is OK`, async () => {
       const w = where("regions", "array-contains", "west_coast");
       type _ = Assert<
-        Extends<{ _field: string; _op: string; _value: any }, typeof w>
+        Extends<{ _field: string; _op: string; _value: string }, typeof w>
       >;
       type __ = Assert<
         Extends<
@@ -268,16 +268,14 @@ describe("read data once", () => {
   });
 
   test("update nested doc partially", async () => {
-    const docRef: fs.DocumentReference<C3> = doc(
+    const docRef: fs.DocumentReference<C3> = doc(collection(
       DB,
       "C1",
       "c1",
       "C2",
       "c2",
       "C3",
-      "c3"
-    );
-    expect(docRef.id).toBe("c3");
+    ));
 
     const data = {
       c3: "c3",
