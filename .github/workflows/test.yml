@@ -16,8 +16,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
@@ -27,3 +26,4 @@ jobs:
           java-version: "16"
       - run: npm ci
       - run: npm run test-on-emu
+      - run: npx -ws tsc --noEmit
