@@ -238,8 +238,8 @@ export type OrConstraints<T extends DocumentData, K extends StrKeyof<T>> = {
   [L in StrKeyof<T>]:
     | (T[L] extends DocumentData
         ? never
-        : T[L] extends unknown[]
-        ? "array-contains-any" extends LegalOperation<T, L>
+            : T[L] extends FieldType[]
+            ? "array-contains-any" extends LegalOperation<T, L>
           ? WhereConstraint<T, L, "array-contains-any", T[L]>
           : never
         : never)
