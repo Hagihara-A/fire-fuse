@@ -255,8 +255,8 @@ export type AllowedConstraints<T extends DocumentData> = {
     ...{
       [L in StrKeyof<T>]: Repeat<WhereConstraint<T, L, "==", T[L]>>;
     }[StrKeyof<T>],
-    ...(CompareOp | "!=" extends LegalOperation<T, K>
-      ? Repeat<WhereConstraint<T, K, CompareOp | "!=", T[K]>>
+    ...(GreaterOrLesserOp | "!=" extends LegalOperation<T, K>
+      ? Repeat<WhereConstraint<T, K, GreaterOrLesserOp | "!=", T[K]>>
       : []),
     ...(
       | []
