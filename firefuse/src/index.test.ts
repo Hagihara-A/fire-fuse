@@ -417,16 +417,21 @@ describe("OrConstraints", () => {
     type _ = Assert<Extends<E, A>>;
   });
 
-  test("array-contains-any appear only in array field", () => {
+  test("remove undefined in optional field ", () => {
     type Model = {
       C?: ("a" | "b" | "v")[];
     };
     type E =
-      | fuse.WhereConstraint<Model, "C", "array-contains", "a" | "b" | "v">
+      | fuse.WhereConstraint<
+          Model,
+          "C",
+          "array-contains-any",
+          ("a" | "b" | "v")[]
+        >
       | fuse.WhereConstraint<Model, "C", "in", ("a" | "b" | "v")[][]>
       | fuse.WhereConstraint<Model, "C", "not-in", ("a" | "b" | "v")[][]>;
     type A = fuse.OrConstraints<Model, "C">;
-
     type _ = Assert<Extends<E, A>>;
+    type __ = Assert<Extends<A, E>>;
   });
 });
