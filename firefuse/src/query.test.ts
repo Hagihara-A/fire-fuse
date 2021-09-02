@@ -1,3 +1,4 @@
+import * as fs from "firebase/firestore";
 import * as fuse from ".";
 import {
   City,
@@ -84,14 +85,24 @@ describe("multple constraints", () => {
     type _ = Assert<Extends<Constraints, typeof constraints>>;
   });
 
-  // known bug, not implemented
-  // test("!= & not-in is not valid", () => {
-  //   const constraints = [
-  //     where("state", "!=", "CA"),
-  //     where("state", "not-in", ["ABC"]),
-  //   ] as const;
-  //   type _ = Assert<NotExtends<Constraints, typeof constraints>>;
-  // });
+  test("TODO: arr-con & arr-con-any is NG", () => {
+    const constraints = [
+      where("regions", "array-contains", "CA"),
+      where("regions", "array-contains-any", ["ABC"]),
+    ] as const;
+    type _ = Assert<Extends<Constraints, typeof constraints>>;
+
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
+  });
+
+  test("TODO: != & not-in is NG", () => {
+    const constraints = [
+      where("state", "!=", "CA"),
+      where("state", "not-in", ["ABC"]),
+    ] as const;
+    type _ = Assert<NotExtends<Constraints, typeof constraints>>;
+    expect(() => fs.getDocs(fs.query(cities, ...constraints))).toThrow();
+  });
 
   test("not-in & in & >= & == && orderBy && ...otherConstraints is valid", () => {
     const constraints: Constraints = [
