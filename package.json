@@ -1,4 +1,5 @@
 {
+  "name": "firefuse",
   "scripts": {
     "emu": "firebase emulators:start --export-on-exit --import=emudata  --project hoge",
     "prepare": "husky install",
