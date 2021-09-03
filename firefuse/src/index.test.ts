@@ -55,6 +55,11 @@ export type City = {
 
 export type Extends<E, A> = A extends E ? true : false;
 export type NotExtends<E, A> = A extends E ? false : true;
+export type Exact<A, B> = Extends<A, B> extends true
+  ? Extends<B, A> extends true
+    ? true
+    : false
+  : false;
 export type Assert<T extends true> = T;
 
 export const collection = fuse.collection<MySchema>();
