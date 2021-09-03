@@ -96,36 +96,9 @@ export const doc = <S extends SchemaBase>() => {
   return d;
 };
 
-export type DeepKeys<T extends DocumentData> = {
-  [K in keyof T]: T[K] extends DocumentData
-    ? [K, ...DeepKeys<T[K]>] | [K]
-    : [K];
-}[keyof T];
-
-export type Join<T extends string[]> = T extends [infer H]
-  ? `${H & string}`
-  : T extends [infer H, ...infer Rest]
-  ? Rest extends string[]
-    ? `${H & string}.${Join<Rest> & string}`
-    : never
-  : never;
-
-export type UpdateKeys<T extends DocumentData> = Join<
-  DeepKeys<T> extends string[] ? DeepKeys<T> : never
->;
-
-export type DeepPartial<T extends DocumentData> = {
-  [K in keyof T]?: T[K] extends DocumentData ? DeepPartial<T[K]> : T[K];
-};
-
 export type ArrayOp = Extract<
   firestore.WhereFilterOp,
   "array-contains" | "array-contains-any"
->;
-
-export type PrimitiveOp = Extract<
-  firestore.WhereFilterOp,
-  "<" | "<=" | "==" | "!=" | ">=" | ">" | "in" | "not-in"
 >;
 
 export const where = <T extends DocumentData>() => {
