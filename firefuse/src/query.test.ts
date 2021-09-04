@@ -7,6 +7,7 @@ import {
   NotExtends,
   collection,
   DB,
+  Exact,
 } from "./index.test";
 
 const where = fuse.where<City>();
@@ -247,5 +248,117 @@ describe("multple constraints", () => {
       orderBy("population"),
     ] as const;
     type _ = Assert<Extends<Constraints, typeof constraints>>;
+  });
+});
+
+import { ConstrainedData as CD } from ".";
+describe("ConstraintedData", () => {
+  const cities = collection(DB, "cities");
+
+  describe("single constraint", () => {
+    test("field of > exists", () => {
+      const cs = [where("population", ">=", 1000)] as const;
+      type T = CD<City, typeof cs>;
+
+      type _ = Assert<Extends<{ population: number }, T>>;
+    });
+
+    test("field of == exists", () => {
+      const cs = [where("capital", "==", true)] as const;
+      type T = CD<City, typeof cs>;
+      type _ = Assert<Extends<{ capital: boolean }, T>>;
+    });
+    
+    test("field of != exists", () => {
+      const cs = [where("name", "!=", "asd")] as const;
+      type T = CD<City, typeof cs>;
+      type _ = Assert<Extends<{ name: string }, T>>;
+    });
+
+    test("field of array-contains exists", () => {
+      const cs = [where("regions", "array-contains", "asd")] as const;
+      type T = CD<City, typeof cs>;
+      type _ = Assert<Exact<{ regions: string[] }, Pick<T, "regions">>>;
+    });
+
+    test("field of array-contains-any exists", () => {
+      const cs = [where("regions", "array-contains-any", ["asd"])] as const;
+      type T = CD<City, typeof cs>;
+      type _ = Assert<Extends<{ regions: string[] }, T>>;
+    });
+
+    test("field of in exists", () => {
+      const cs = [where("population", "in", [1000, 2000])] as const;
+      type T = CD<City, typeof cs>;
+      type _ = Assert<Extends<{ population: number }, T>>;
+    });
+
+    test("field of not-in exists", () => {
+      const cs = [where("population", "not-in", [1000, 2000])] as const;
+      type T = CD<City, typeof cs>;
+      type _ = Assert<Extends<{ population: number }, T>>;
+    });
+  });
+
+  describe("combinated constraints", () => {
+    test("== & ==", () => {
+      const cs = [
+        where("capital", "==", true),
+        where("population", "==", 1000),
+      ] as const;
+      type T = CD<City, typeof cs>;
+      type _ = Assert<
+        Exact<
+          { population: number; capital: boolean },
+          Pick<T, "capital" | "population">
+        >
+      >;
+      expect(() => fs.query(cities, ...cs)).not.toThrow();
+    });
+
+    test("< & == is OK. field exists", () => {
+      const cs = [
+        where("population", "<", 1000),
+        where("capital", "==", true),
+      ] as const;
+      type T = CD<City, typeof cs>;
+      type _ = Assert<
+        Exact<
+          { population: number; capital: boolean },
+          Pick<T, "population" | "capital">
+        >
+      >;
+      expect(() => fs.query(cities, ...cs)).not.toThrow();
+    });
+
+    test("population > 1000 & name < US is never", () => {
+      const cs = [
+        where("population", ">", 1000),
+        where("name", "<", "US"),
+      ] as const;
+      type T = CD<City, typeof cs>;
+      type _ = Assert<Extends<never, T>>;
+      expect(() => fs.query(cities, ...cs)).not.toThrow();
+    });
+
+    test("!= & not-in is never", () => {
+      const cs = [
+        where("population", "!=", 1000),
+        where("name", "not-in", ["US"]),
+      ] as const;
+      type T = CD<City, typeof cs>;
+      type _ = Assert<Extends<never, T>>;
+      expect(() => fs.query(cities, ...cs)).not.toThrow();
+    });
+
+    test("arr-con & arr-con-any is never", () => {
+      const cs = [
+        where("regions", "array-contains", ""),
+        where("regions", "array-contains-any", ["US"]),
+      ] as const;
+      type T = CD<City, typeof cs>;
+      type _ = Assert<Extends<never, T>>;
+      expect(() => fs.query(cities, ...cs)).not.toThrow();
+    });
   });
 });
