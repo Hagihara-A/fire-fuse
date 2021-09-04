@@ -60,6 +60,8 @@ export type Exact<A, B> = Extends<A, B> extends true
     ? true
     : false
   : false;
+export type Match<E, A extends E> = Exact<E, Pick<A, keyof E>> 
+
 export type Assert<T extends true> = T;
 
 export const collection = fuse.collection<MySchema>();
