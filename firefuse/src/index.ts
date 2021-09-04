@@ -255,22 +255,25 @@ export const query = <
   >;
 };
 
-export type Defined<
-  T extends DocumentData,
-  K extends keyof T,
-  V extends unknown
-> = Omit<T, K> & Required<Pick<T, K>>;
+export type OR<T, U extends { [K in keyof T]?: unknown }> = {
+  [K in keyof T]: K extends keyof U ? T[K] | U[K] : T[K];
+};
 
-export type DefWithValue<T, K extends keyof T, V extends T[K]> = T &
-  {
-    [L in K]-?: V;
-  };
+export type OverWrite<
+  T extends DocumentData,
+  U extends { [K in keyof T]?: unknown }
+> = {
+  [K in keyof T]: K extends keyof U ? U[K] : T[K];
+};
+
+export type Defined<T extends DocumentData, K extends StrKeyof<T>> = T &
+  { [L in K]-?: ExcUndef<T[K]> };
 
 // // クエリかけたフィールドが存在する
 // // 不正なクエリならnever
 export type Memory<T extends DocumentData> = {
-  rangeField: keyof T;
-  eqField: keyof T;
+  rangeField: StrKeyof<T>;
+  eqField: StrKeyof<T>;
   prevNot: boolean;
   prevArrcon: boolean;
   prevOr: boolean;
@@ -280,8 +283,8 @@ export type ConstrainedData<
   T extends DocumentData,
   C extends readonly firestore.QueryConstraint[],
   Mem extends Memory<T> = {
-    rangeField: keyof T;
-    eqField: keyof T;
+    rangeField: StrKeyof<T>;
+    eqField: never;
     prevNot: false;
     prevArrcon: false;
     prevOr: false;
@@ -290,61 +293,67 @@ export type ConstrainedData<
   ? T
   : C extends readonly [infer H, ...infer Rest]
   ? Rest extends readonly firestore.QueryConstraint[]
-    ? H extends WhereConstraint<T, infer K, infer OP, infer V>
-      ? OP extends GreaterOrLesserOp
-        ? K extends Mem["rangeField"]
+    ? H extends WhereConstraint<infer U, infer K, infer OP, infer V>
+      ? U extends T
+        ? OP extends GreaterOrLesserOp
+          ? K extends Mem["rangeField"]
+            ? ConstrainedData<Defined<T, K>, Rest, Mem & { rangeField: K }>
+            : never
+          : OP extends "=="
           ? ConstrainedData<
               T & { [L in K]-?: V },
               Rest,
-              Mem & { rangeField: K }
+              OR<Mem, { eqField: K }>
             >
+          : OP extends "!="
+          ? Mem["prevNot"] extends true
+            ? never
+            : K extends Mem["rangeField"]
+            ? ConstrainedData<
+                T & { [L in K]-?: Exclude<T[L], V | undefined> },
+                Rest,
+                OverWrite<Mem, { prevNot: true }> & { rangeField: K }
+              >
+            : never
+          : OP extends "array-contains"
+          ? Mem["prevArrcon"] extends true
+            ? never
+            : ConstrainedData<
+                Defined<T, K>,
+                Rest,
+                OverWrite<Mem, { prevArrcon: true }>
+              >
+          : OP extends "array-contains-any"
+          ? Mem["prevArrcon"] extends true
+            ? never
+            : Mem["prevOr"] extends true
+            ? never
+            : ConstrainedData<
+                Defined<T, K>,
+                Rest,
+                OverWrite<Mem, { prevArrcon: true; prevOr: true }>
+              >
+          : OP extends "in"
+          ? Mem["prevOr"] extends true
+            ? never
+            : V extends T[K][]
+            ? ConstrainedData<
+                T & { [L in K]-?: V[number] },
+                Rest,
+                OR<OverWrite<Mem, { prevOr: true }>, { eqField: K }>
+              >
+            : never
+          : OP extends "not-in"
+          ? Mem["prevOr"] extends true
+            ? never
+            : V extends T[K][]
+            ? ConstrainedData<
+                T & { [L in K]-?: Exclude<T[L], V[number] | undefined> },
+                Rest,
+                OverWrite<Mem, { prevOr: true; prevNot: true }>
+              >
+            : never
           : never
-        : OP extends "=="
-        ? ConstrainedData<T & { [L in K]-?: V }, Rest, Mem & { eqField: K }>
-        : OP extends "!="
-        ? Mem["prevNot"] extends true
-          ? never
-          : K extends Mem["rangeField"]
-          ? ConstrainedData<
-              T & { [L in K]-?: T[L] },
-              Rest,
-              Mem & { prevNot: true; rangeField: K }
-            >
-          : never
-        : OP extends "array-contains"
-        ? Mem["prevArrcon"] extends true
-          ? never
-          : ConstrainedData<
-              T & { [L in K]-?: T[L] },
-              Rest,
-              Mem & { prevArrcon: true }
-            >
-        : OP extends "array-contains-any"
-        ? Mem["prevArrcon"] extends true
-          ? never
-          : Mem["prevOr"] extends true
-          ? never
-          : ConstrainedData<
-              T & { [L in K]-?: T[L] },
-              Rest,
-              Mem & { prevArrcon: true; prevOr: true }
-            >
-        : OP extends "in"
-        ? Mem["prevOr"] extends true
-          ? never
-          : ConstrainedData<
-              T & { [L in K]-?: T[L] },
-              Rest,
-              Mem & { prevOr: true; eqField: K } // eqField TODO
-            >
-        : OP extends "not-in"
-        ? Mem["prevOr"] extends true
-          ? never
-          : ConstrainedData<
-              T & { [L in K]-?: T[L] },
-              Rest,
-              Mem & { prevOr: true; prevNot: true }
-            >
         : never
       : never
     : never
