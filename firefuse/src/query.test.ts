@@ -175,5 +175,25 @@ describe("ConstraintedData", () => {
       type T = CD<City, typeof cs>;
       type _ = Assert<Match<{ name: string }, T>>;
     });
+
+    test("population > number & name not-in string[] is never", () => {
+      const cs = [
+        where("population", ">", 1000),
+        where("name", "not-in", ["A", "B"]),
+      ] as const;
+
+      type T = CD<City, typeof cs>;
+      type _ = Assert<Never<T>>;
+    });
+
+    test("population > number & name != string is never", () => {
+      const cs = [
+        where("population", ">", 1000),
+        where("name", "!=", "A"),
+      ] as const;
+
+      type T = CD<City, typeof cs>;
+      type _ = Assert<Never<T>>;
+    });
   });
 });
