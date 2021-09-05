@@ -55,6 +55,20 @@ describe("ConstraintedData", () => {
       type T = CD<City, typeof cs>;
       type _ = Assert<Match<{ population: number }, T>>;
     });
+
+    test("name != string is not never", () => {
+      const cs = [where("name", "!=", "tokyo")] as const;
+      type T = CD<City, typeof cs>;
+      type _ = Assert<Match<{ name: string }, T>>;
+      expect(() => fs.getDocs(fs.query(cities, ...cs))).not.toThrow();
+    });
+
+    test("name not-in string[] is not never", () => {
+      const cs = [where("name", "not-in", ["tokyo"])] as const;
+      type T = CD<City, typeof cs>;
+      type _ = Assert<Match<{ name: string }, T>>;
+      expect(() => fs.getDocs(fs.query(cities, ...cs))).not.toThrow();
+    });
   });
   describe("combinated constraints", () => {
     test("== & ==", () => {
@@ -74,7 +88,17 @@ describe("ConstraintedData", () => {
       ] as const;
       type T = CD<City, typeof cs>;
       type _ = Assert<Match<{ population: number; capital: boolean }, T>>;
-      expect(() => fs.query(cities, ...cs)).not.toThrow();
+      expect(() => fs.getDocs(fs.query(cities, ...cs))).not.toThrow();
+    });
+
+    test("population > 1000 & population < 2000 is OK", () => {
+      const cs = [
+        where("population", ">", 1000),
+        where("population", "<", 2000),
+      ] as const;
+      type T = CD<City, typeof cs>;
+      type _ = Assert<Match<{ population: number }, T>>;
+      expect(() => fs.getDocs(fs.query(cities, ...cs))).not.toThrow();
     });
 
     test("population > 1000 & name < US is never", () => {
