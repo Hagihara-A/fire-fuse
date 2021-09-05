@@ -100,12 +100,11 @@ export type ArrayOp = Extract<
   firestore.WhereFilterOp,
   "array-contains" | "array-contains-any"
 >;
-
 export const where = <T extends DocumentData>() => {
   return <
     F extends StrKeyof<T>,
     OP extends LegalOperation<T, F>,
-    V extends ExcUndef<LegalValue<T, F, OP>>
+    V extends Readonly<LegalValue<T, F, OP>>
   >(
     field: F,
     op: OP,
@@ -167,7 +166,7 @@ export interface WhereConstraint<
   T extends DocumentData,
   F extends StrKeyof<T>,
   OP extends LegalOperation<T, F>,
-  V extends LegalValue<T, F, OP>
+  V extends Readonly<LegalValue<T, F, OP>>
 > extends firestore.QueryConstraint {
   readonly type: Extract<firestore.QueryConstraintType, "where">;
   _field: F;
@@ -236,7 +235,7 @@ export type ConstrainedData<
   : C extends readonly [infer H, ...infer Rest]
   ? Rest extends readonly firestore.QueryConstraint[]
     ? H extends WhereConstraint<infer U, infer K, infer OP, infer V>
-      ? U extends T
+      ? T extends U
         ? OP extends GreaterOrLesserOp
           ? K extends Mem["rangeField"]
             ? ConstrainedData<Defined<T, K>, Rest, Mem & { rangeField: K }>
@@ -252,7 +251,7 @@ export type ConstrainedData<
             ? never
             : K extends Mem["rangeField"]
             ? ConstrainedData<
-                T & { [L in K]-?: Exclude<T[L], V | undefined> },
+                T & { [L in K]-?: Exclude<T[L], V> },
                 Rest,
                 OverWrite<Mem, { prevNot: true }> & { rangeField: K }
               >
@@ -278,7 +277,7 @@ export type ConstrainedData<
           : OP extends "in"
           ? Mem["prevOr"] extends true
             ? never
-            : V extends T[K][]
+            : V extends readonly T[K][]
             ? ConstrainedData<
                 T & { [L in K]-?: V[number] },
                 Rest,
@@ -288,7 +287,9 @@ export type ConstrainedData<
           : OP extends "not-in"
           ? Mem["prevOr"] extends true
             ? never
-            : V extends T[K][]
+            : Mem["prevNot"] extends true
+            ? never
+            : V extends readonly T[K][]
             ? ConstrainedData<
                 T & { [L in K]-?: Exclude<T[L], V[number] | undefined> },
                 Rest,
@@ -300,6 +301,7 @@ export type ConstrainedData<
       : never
     : never
   : never;
+
 export const limit = (limit: number) =>
   firestore.limit(limit) as OtherConstraints;
 export const limitToLast = (limit: number) =>
