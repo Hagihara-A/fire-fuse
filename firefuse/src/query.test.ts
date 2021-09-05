@@ -1,7 +1,15 @@
 import * as fs from "firebase/firestore";
 import * as fuse from ".";
 import { ConstrainedData as CD } from ".";
-import { Assert, City, collection, DB, Match, Never } from "./index.test";
+import {
+  Assert,
+  City,
+  collection,
+  DB,
+  Exact,
+  Match,
+  Never,
+} from "./index.test";
 
 const where = fuse.where<City>();
 const orderBy = fuse.orderBy<City>();
@@ -68,6 +76,47 @@ describe("ConstraintedData", () => {
       type T = CD<City, typeof cs>;
       type _ = Assert<Match<{ name: string }, T>>;
       expect(() => fs.getDocs(fs.query(cities, ...cs))).not.toThrow();
+    });
+
+    test("!= excludes literal union", () => {
+      type M = {
+        type?: "A" | "B" | "C";
+      };
+      
+      const where = fuse.where<M>();
+      const cs = [where("type", "!=", "A" as const)] as const;
+      type T = CD<M, typeof cs>;
+      type _ = Assert<Exact<{ type: "B" | "C" }, T>>;
+    });
+
+    test("not-in excludes literal union", () => {
+      type M = {
+        type?: "A" | "B" | "C";
+      };
+      const where = fuse.where<M>();
+      const cs = [where("type", "not-in", ["A", "C"] as const)] as const;
+      type T = CD<M, typeof cs>;
+      type _ = Assert<Exact<{ type: "B" }, T>>;
+    });
+
+    test("== narros sliteral union", () => {
+      type M = {
+        type?: "A" | "B" | "C";
+      };
+      const where = fuse.where<M>();
+      const cs = [where("type", "==", "A" as const)] as const;
+      type T = CD<M, typeof cs>;
+      type _ = Assert<Exact<{ type: "A" }, T>>;
+    });
+
+    test("in narrows literal union", () => {
+      type M = {
+        type?: "A" | "B" | "C";
+      };
+      const where = fuse.where<M>();
+      const cs = [where("type", "in", ["A", "C"] as const)] as const;
+      type T = CD<M, typeof cs>;
+      type _ = Assert<Exact<{ type: "A" | "C" }, T>>;
     });
   });
   describe("combinated constraints", () => {
