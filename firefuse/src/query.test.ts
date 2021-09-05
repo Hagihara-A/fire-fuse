@@ -1,25 +1,12 @@
 import * as fs from "firebase/firestore";
 import * as fuse from ".";
-import {
-  City,
-  Assert,
-  Extends,
-  NotExtends,
-  collection,
-  DB,
-  Exact,
-  Match,
-  Never,
-} from "./index.test";
+import { ConstrainedData as CD } from ".";
+import { Assert, City, collection, DB, Match, Never } from "./index.test";
 
 const where = fuse.where<City>();
 const orderBy = fuse.orderBy<City>();
 const cities = collection(DB, "cities");
 
-describe("single constraint is OK", () => {});
-
-import { ConstrainedData as CD } from ".";
-import { types } from "@babel/core";
 describe("ConstraintedData", () => {
   const cities = collection(DB, "cities");
 
@@ -76,7 +63,7 @@ describe("ConstraintedData", () => {
         where("population", "==", 1000 as const),
       ] as const;
       type T = CD<City, typeof cs>;
-      type _ = Assert<Match<{ population: number; capital: boolean }, T>>;
+      type _ = Assert<Match<{ population: 1000; capital: true }, T>>;
       expect(() => fs.query(cities, ...cs)).not.toThrow();
     });
 
