@@ -218,6 +218,7 @@ export type Memory<T extends DocumentData> = {
   prevNot: boolean;
   prevArrcon: boolean;
   prevOr: boolean;
+  prevOrderBy: boolean;
 };
 
 export type ConstrainedData<
@@ -229,6 +230,7 @@ export type ConstrainedData<
     prevNot: false;
     prevArrcon: false;
     prevOr: false;
+    prevOrderBy: false;
   }
 > = C extends []
   ? T
@@ -298,6 +300,18 @@ export type ConstrainedData<
             : never
           : never
         : never
+      : H extends OrderByConstraint<infer K>
+      ? Mem["prevOrderBy"] extends true
+        ? ConstrainedData<Defined<T, K>, Rest, Mem>
+        : K extends Mem["rangeField"]
+        ? ConstrainedData<
+            Defined<T, K>,
+            Rest,
+            OverWrite<Mem, { prevOrderBy: true }>
+          >
+        : never
+      : H extends OtherConstraints
+      ? ConstrainedData<T, Rest, Mem>
       : never
     : never
   : never;
