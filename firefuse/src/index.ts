@@ -185,64 +185,6 @@ export interface OtherConstraints extends firestore.QueryConstraint {
   readonly type: Exclude<firestore.QueryConstraintType, "where" | "orderBy">;
 }
 
-type Repeat<T> = [] | [T] | [T, T] | [T, T, T];
-
-export type OrConstraints<
-  T extends DocumentData,
-  NotInKey extends StrKeyof<T>
-> =
-  | {
-      [L in StrKeyof<T>]:
-        | (T[L] extends DocumentData | undefined
-            ? never
-            : T[L] extends FieldType[] | undefined
-            ? "array-contains-any" extends LegalOperation<T, L>
-              ? ExcUndef<T[L]> extends LegalValue<T, L, "array-contains-any">
-                ? WhereConstraint<T, L, "array-contains-any", ExcUndef<T[L]>>
-                : never
-              : never
-            : never)
-        | WhereConstraint<T, L, "in", ExcUndef<T[L]>[]>;
-    }[StrKeyof<T>]
-  | WhereConstraint<T, NotInKey, "not-in", ExcUndef<T[NotInKey]>[]>;
-
-export type AllowedConstraints<T extends DocumentData> = {
-  [K in StrKeyof<T>]: readonly [
-    ...Repeat<
-      {
-        [L in StrKeyof<T>]: WhereConstraint<T, L, "==", ExcUndef<T[L]>>;
-      }[StrKeyof<T>]
-    >,
-    ...(GreaterOrLesserOp | "!=" extends LegalOperation<T, K>
-      ? Repeat<WhereConstraint<T, K, GreaterOrLesserOp | "!=", T[K]>>
-      : []),
-    ...(
-      | []
-      | {
-          [L in StrKeyof<T>]: "array-contains" extends LegalOperation<T, L>
-            ? T[L] extends (infer E)[] | undefined
-              ? E extends LegalValue<T, L, "array-contains">
-                ? [WhereConstraint<T, L, "array-contains", E>]
-                : []
-              : []
-            : [];
-        }[StrKeyof<T>]
-    ),
-    ...([] | [OrConstraints<T, K>]),
-    ...(
-      | []
-      | [OrderByConstraint<K>]
-      | [OrderByConstraint<K>, OrderByConstraint<Exclude<StrKeyof<T>, K>>]
-      | [
-          OrderByConstraint<K>,
-          OrderByConstraint<Exclude<StrKeyof<T>, K>>,
-          OrderByConstraint<Exclude<StrKeyof<T>, K>>
-        ]
-    ),
-    ...OtherConstraints[]
-  ];
-}[StrKeyof<T>];
-
 export const query = <
   T extends DocumentData,
   CS extends readonly firestore.QueryConstraint[]
