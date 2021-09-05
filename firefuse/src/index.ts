@@ -16,7 +16,7 @@ export interface DocumentData {
 export type StrKeyof<T> = keyof T & string;
 
 export interface SchemaBase {
-  [K: string]: {
+  readonly [K: string]: {
     doc: DocumentData;
     subcollection?: SchemaBase;
   };
@@ -96,43 +96,15 @@ export const doc = <S extends SchemaBase>() => {
   return d;
 };
 
-export type DeepKeys<T extends DocumentData> = {
-  [K in keyof T]: T[K] extends DocumentData
-    ? [K, ...DeepKeys<T[K]>] | [K]
-    : [K];
-}[keyof T];
-
-export type Join<T extends string[]> = T extends [infer H]
-  ? `${H & string}`
-  : T extends [infer H, ...infer Rest]
-  ? Rest extends string[]
-    ? `${H & string}.${Join<Rest> & string}`
-    : never
-  : never;
-
-export type UpdateKeys<T extends DocumentData> = Join<
-  DeepKeys<T> extends string[] ? DeepKeys<T> : never
->;
-
-export type DeepPartial<T extends DocumentData> = {
-  [K in keyof T]?: T[K] extends DocumentData ? DeepPartial<T[K]> : T[K];
-};
-
 export type ArrayOp = Extract<
   firestore.WhereFilterOp,
   "array-contains" | "array-contains-any"
 >;
-
-export type PrimitiveOp = Extract<
-  firestore.WhereFilterOp,
-  "<" | "<=" | "==" | "!=" | ">=" | ">" | "in" | "not-in"
->;
-
 export const where = <T extends DocumentData>() => {
   return <
     F extends StrKeyof<T>,
     OP extends LegalOperation<T, F>,
-    V extends ExcUndef<LegalValue<T, F, OP>>
+    V extends Readonly<LegalValue<T, F, OP>>
   >(
     field: F,
     op: OP,
@@ -163,21 +135,21 @@ type GreaterOrLesserOp = Extract<
 export type LegalValue<
   T extends DocumentData,
   F extends StrKeyof<T>,
-  OP extends firestore.WhereFilterOp
+  OP extends LegalOperation<T, F>
 > = OP extends "!=" | "=="
   ? ExcUndef<T[F]>
   : OP extends "in" | "not-in"
   ? ExcUndef<T[F]>[]
   : OP extends GreaterOrLesserOp
-  ? T[F] extends UnPrimitive | undefined
+  ? ExcUndef<T[F]> extends UnPrimitive
     ? never
     : ExcUndef<T[F]>
   : OP extends "array-contains-any"
-  ? T[F] extends FieldType[] | undefined
-    ? T[F]
+  ? ExcUndef<T[F]> extends (infer E)[]
+    ? E[]
     : never
   : OP extends "array-contains"
-  ? T[F] extends (infer E)[] | undefined
+  ? ExcUndef<T[F]> extends (infer E)[]
     ? E
     : never
   : never;
@@ -194,7 +166,7 @@ export interface WhereConstraint<
   T extends DocumentData,
   F extends StrKeyof<T>,
   OP extends LegalOperation<T, F>,
-  V extends LegalValue<T, F, OP> | undefined
+  V extends Readonly<LegalValue<T, F, OP>>
 > extends firestore.QueryConstraint {
   readonly type: Extract<firestore.QueryConstraintType, "where">;
   _field: F;
@@ -212,68 +184,149 @@ export interface OtherConstraints extends firestore.QueryConstraint {
   readonly type: Exclude<firestore.QueryConstraintType, "where" | "orderBy">;
 }
 
-type Repeat<T> = [] | [T] | [T, T] | [T, T, T];
-
-export type OrConstraints<
+export const query = <
   T extends DocumentData,
-  NotInKey extends StrKeyof<T>
-> =
-  | {
-      [L in StrKeyof<T>]:
-        | (T[L] extends DocumentData | undefined
-            ? never
-            : T[L] extends FieldType[] | undefined
-            ? "array-contains-any" extends LegalOperation<T, L>
-              ? T[L] extends LegalValue<T, L, "array-contains-any"> | undefined
-                ? WhereConstraint<T, L, "array-contains-any", ExcUndef<T[L]>>
-                : never
-              : never
-            : never)
-        | WhereConstraint<T, L, "in", ExcUndef<T[L]>[]>;
-    }[StrKeyof<T>]
-  | WhereConstraint<T, NotInKey, "not-in", ExcUndef<T[NotInKey]>[]>;
-
-export type AllowedConstraints<T extends DocumentData> = {
-  [K in StrKeyof<T>]: readonly [
-    ...Repeat<
-      {
-        [L in StrKeyof<T>]: WhereConstraint<T, L, "==", ExcUndef<T[L]>>;
-      }[StrKeyof<T>]
-    >,
-    ...(GreaterOrLesserOp | "!=" extends LegalOperation<T, K>
-      ? Repeat<WhereConstraint<T, K, GreaterOrLesserOp | "!=", T[K]>>
-      : []),
-    ...(
-      | []
-      | {
-          [L in StrKeyof<T>]: "array-contains" extends LegalOperation<T, L>
-            ? T[L] extends (infer E)[] | undefined
-              ? E extends LegalValue<T, L, "array-contains">
-                ? [WhereConstraint<T, L, "array-contains", E>]
-                : []
-              : []
-            : [];
-        }[StrKeyof<T>]
-    ),
-    ...([] | [OrConstraints<T, K>]),
-    ...(
-      | []
-      | [OrderByConstraint<K>]
-      | [OrderByConstraint<K>, OrderByConstraint<Exclude<StrKeyof<T>, K>>]
-      | [
-          OrderByConstraint<K>,
-          OrderByConstraint<Exclude<StrKeyof<T>, K>>,
-          OrderByConstraint<Exclude<StrKeyof<T>, K>>
-        ]
-    ),
-    ...OtherConstraints[]
-  ];
-}[StrKeyof<T>];
-
-export const query = <T extends DocumentData>(
+  CS extends readonly firestore.QueryConstraint[]
+>(
   query: firestore.Query<T>,
-  ...queryConstraints: AllowedConstraints<T>
-) => firestore.query(query, ...queryConstraints);
+  ...queryConstraints: CS
+) => {
+  return firestore.query(query, ...queryConstraints) as firestore.Query<
+    ConstrainedData<T, CS>
+  >;
+};
+
+export type OR<T, U extends { [K in keyof T]?: unknown }> = {
+  [K in keyof T]: K extends keyof U ? T[K] | U[K] : T[K];
+};
+
+export type OverWrite<
+  T extends DocumentData,
+  U extends { [K in keyof T]?: unknown }
+> = {
+  [K in keyof T]: K extends keyof U ? U[K] : T[K];
+};
+
+export type Defined<T extends DocumentData, K extends StrKeyof<T>> = T &
+  { [L in K]-?: ExcUndef<T[K]> };
+
+// // クエリかけたフィールドが存在する
+// // 不正なクエリならnever
+export type Memory<T extends DocumentData> = {
+  rangeField: StrKeyof<T>;
+  eqField: StrKeyof<T>;
+  prevNot: boolean;
+  prevArrcon: boolean;
+  prevOr: boolean;
+  prevOrderBy: boolean;
+};
+
+export type ConstrainedData<
+  T extends DocumentData,
+  C extends readonly firestore.QueryConstraint[],
+  Mem extends Memory<T> = {
+    rangeField: StrKeyof<T>;
+    eqField: never;
+    prevNot: false;
+    prevArrcon: false;
+    prevOr: false;
+    prevOrderBy: false;
+  }
+> = C extends []
+  ? T
+  : C extends readonly [infer H, ...infer Rest]
+  ? Rest extends readonly firestore.QueryConstraint[]
+    ? H extends WhereConstraint<infer U, infer K, infer OP, infer V>
+      ? T extends U
+        ? OP extends GreaterOrLesserOp
+          ? K extends Mem["rangeField"]
+            ? ConstrainedData<Defined<T, K>, Rest, Mem & { rangeField: K }>
+            : never
+          : OP extends "=="
+          ? ConstrainedData<
+              T & { [L in K]-?: V },
+              Rest,
+              OR<Mem, { eqField: K }>
+            >
+          : OP extends "!="
+          ? Mem["prevNot"] extends true
+            ? never
+            : K extends Mem["rangeField"]
+            ? ConstrainedData<
+                T &
+                  {
+                    [L in K]-?: T[L] extends V
+                      ? T[L]
+                      : Exclude<T[L], V | undefined>;
+                  },
+                Rest,
+                OverWrite<Mem, { prevNot: true }> & { rangeField: K }
+              >
+            : never
+          : OP extends "array-contains"
+          ? Mem["prevArrcon"] extends true
+            ? never
+            : ConstrainedData<
+                Defined<T, K>,
+                Rest,
+                OverWrite<Mem, { prevArrcon: true }>
+              >
+          : OP extends "array-contains-any"
+          ? Mem["prevArrcon"] extends true
+            ? never
+            : Mem["prevOr"] extends true
+            ? never
+            : ConstrainedData<
+                Defined<T, K>,
+                Rest,
+                OverWrite<Mem, { prevArrcon: true; prevOr: true }>
+              >
+          : OP extends "in"
+          ? Mem["prevOr"] extends true
+            ? never
+            : V extends readonly T[K][]
+            ? ConstrainedData<
+                T & { [L in K]-?: V[number] },
+                Rest,
+                OR<OverWrite<Mem, { prevOr: true }>, { eqField: K }>
+              >
+            : never
+          : OP extends "not-in"
+          ? Mem["prevOr"] extends true
+            ? never
+            : Mem["prevNot"] extends true
+            ? never
+            : K extends Mem["rangeField"]
+            ? V extends readonly T[K][]
+              ? ConstrainedData<
+                  T &
+                    {
+                      [L in K]-?: T[L] extends V[number]
+                        ? ExcUndef<T[L]>
+                        : Exclude<T[L], V[number] | undefined>;
+                    },
+                  Rest,
+                  OverWrite<Mem, { prevOr: true; prevNot: true }>
+                >
+              : never
+            : never
+          : never
+        : never
+      : H extends OrderByConstraint<infer K>
+      ? Mem["prevOrderBy"] extends true
+        ? ConstrainedData<Defined<T, K>, Rest, Mem>
+        : K extends Mem["rangeField"]
+        ? ConstrainedData<
+            Defined<T, K>,
+            Rest,
+            OverWrite<Mem, { prevOrderBy: true }>
+          >
+        : never
+      : H extends OtherConstraints
+      ? ConstrainedData<T, Rest, Mem>
+      : never
+    : never
+  : never;
 
 export const limit = (limit: number) =>
   firestore.limit(limit) as OtherConstraints;

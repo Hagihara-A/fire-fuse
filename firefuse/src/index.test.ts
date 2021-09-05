@@ -55,6 +55,14 @@ export type City = {
 
 export type Extends<E, A> = A extends E ? true : false;
 export type NotExtends<E, A> = A extends E ? false : true;
+export type Exact<A, B> = Extends<A, B> extends true
+  ? Extends<B, A> extends true
+    ? true
+    : false
+  : false;
+export type Match<E, A extends E> = Exact<E, Pick<A, keyof E>>;
+export type Never<T> = T extends never ? true : false;
+
 export type Assert<T extends true> = T;
 
 export const collection = fuse.collection<MySchema>();
@@ -178,7 +186,6 @@ describe("read data once", () => {
   });
 
   describe("where", () => {
-    type Constraints = fuse.AllowedConstraints<City>;
     const where = fuse.where<City>();
 
     test("use fuse.where with firestore.query", () => {
@@ -187,9 +194,7 @@ describe("read data once", () => {
 
     test("where(capital, ==, true) is OK", async () => {
       const c = where("capital", "==", true);
-      type _ = Assert<Extends<Constraints, [typeof c]>>;
-
-      const q: fs.Query<City> = query(collection(DB, "cities"), c);
+      const q = query(collection(DB, "cities"), c);
 
       const querySnapshot = await fs.getDocs(q);
       querySnapshot.forEach((doc) => {
@@ -207,8 +212,7 @@ describe("read data once", () => {
           typeof w
         >
       >;
-      type ___ = Assert<Extends<Constraints, [typeof w]>>;
-      const q: fs.Query<City> = query(collection(DB, "cities"), w);
+      const q = query(collection(DB, "cities"), w);
       const docs = await fs.getDocs(q);
       expect(
         docs.docs.every((doc) => doc.data().regions?.includes("west_coast"))
@@ -216,8 +220,8 @@ describe("read data once", () => {
     });
 
     test(`where("country", "in", ["USA", "Japan"]) is OK`, async () => {
-      const c = where("country", "in", ["USA", "Japan"]);
-      const q: fs.Query<City> = query(collection(DB, "cities"), c);
+      const c = where("country", "in", ["USA", "Japan"] as const);
+      const q = query(collection(DB, "cities"), c);
       const querySS = await fs.getDocs(q);
       querySS.forEach((ss) => {
         expect(["USA", "Japan"]).toContain(ss.data().country);
@@ -225,7 +229,7 @@ describe("read data once", () => {
     });
 
     test(`get cities where("country", "not-in", ["USA", "Japan"])`, async () => {
-      const q: fs.Query<City> = fs.query(
+      const q = fs.query(
         collection(DB, "cities"),
         where("country", "not-in", ["USA", "Japan"])
       );
@@ -236,7 +240,7 @@ describe("read data once", () => {
     });
 
     test(`get cities where("regions", "array-contains-any", ["west_coast", "east_coast"])`, async () => {
-      const q: fs.Query<City> = query(
+      const q = query(
         collection(DB, "cities"),
         where("regions", "array-contains-any", ["west_coast", "east_coast"])
       );
@@ -265,10 +269,7 @@ describe("read data once", () => {
     });
 
     test(`get cities orderBy("population")`, async () => {
-      const q: fs.Query<City> = fs.query(
-        citiesRef,
-        orderBy("population", "desc")
-      );
+      const q = fs.query(citiesRef, orderBy("population", "desc"));
       const querySS = await fs.getDocs(q);
       let prev = 100000000;
       querySS.forEach((ss) => {
@@ -299,40 +300,5 @@ describe("LegalValue", () => {
   test("string | null", () => {
     type V = fuse.LegalValue<City, "state", "==">;
     type _ = Assert<Extends<string | null, V>>;
-  });
-});
-
-describe("OrConstraints", () => {
-  test("array-contains-any appear only in array field", () => {
-    type Model = {
-      A: string[];
-      B: number;
-    };
-    type E =
-      | fuse.WhereConstraint<Model, "A", "array-contains-any", string[]>
-      | fuse.WhereConstraint<Model, "A", "in", string[][]>
-      | fuse.WhereConstraint<Model, "B", "in", number[]>
-      | fuse.WhereConstraint<Model, "B", "not-in", number[]>;
-    type A = fuse.OrConstraints<Model, "B">;
-
-    type _ = Assert<Extends<E, A>>;
-  });
-
-  test("remove undefined in optional field ", () => {
-    type Model = {
-      C?: ("a" | "b" | "v")[];
-    };
-    type E =
-      | fuse.WhereConstraint<
-          Model,
-          "C",
-          "array-contains-any",
-          ("a" | "b" | "v")[]
-        >
-      | fuse.WhereConstraint<Model, "C", "in", ("a" | "b" | "v")[][]>
-      | fuse.WhereConstraint<Model, "C", "not-in", ("a" | "b" | "v")[][]>;
-    type A = fuse.OrConstraints<Model, "C">;
-    type _ = Assert<Extends<E, A>>;
-    type __ = Assert<Extends<A, E>>;
   });
 });
