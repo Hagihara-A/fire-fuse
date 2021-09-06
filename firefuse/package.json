@@ -1,6 +1,6 @@
 {
   "name": "firefuse",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Definitely typed utilities for firestore",
   "type": "module",
   "repository": "https://github.com/Hagihara-A/fire-fuse",
@@ -9,7 +9,7 @@
     "build": "tsc -p ./tsconfig.build.json",
     "test-w": "jest --watch",
     "lint": "eslint src",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build && npm pack"
   },
   "author": "arark",
   "devDependencies": {
