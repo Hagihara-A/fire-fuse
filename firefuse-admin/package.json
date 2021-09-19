@@ -1,0 +1,36 @@
+{
+  "name": "firefuse-admin",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "jest src",
+    "build": "tsc -p ./tsconfig.build.json",
+    "test-w": "jest --watch",
+    "lint": "eslint src",
+    "prepublishOnly": "npm run build && npm pack"
+  },
+  "peerDependencies": {
+    "firebase-admin": "^9.11.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.0",
+    "@babel/preset-env": "^7.15.0",
+    "@babel/preset-typescript": "^7.15.0",
+    "@types/jest": "^27.0.1",
+    "babel-jest": "^27.1.0",
+    "typescript": "^4.4.2"
+  },
+  "description": "Definitely typed utilities for firestore",
+  "repository": "https://github.com/Hagihara-A/fire-fuse",
+  "author": "arark",
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "files": [
+    "build/**/*"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "typescript",
+    "firestore"
+  ]
+}
