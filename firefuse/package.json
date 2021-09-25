@@ -6,7 +6,7 @@
   "repository": "https://github.com/Hagihara-A/fire-fuse",
   "scripts": {
     "test": "jest src",
-    "build": "tsc -p ./tsconfig.build.json",
+    "build": "tsc",
     "test-w": "jest --watch",
     "lint": "eslint src",
     "prepublishOnly": "npm run build"
