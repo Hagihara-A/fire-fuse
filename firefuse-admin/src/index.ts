@@ -126,12 +126,15 @@ export type Memory<T extends DocumentData> = {
   prevOrderBy: boolean;
 };
 
-
-export interface FuseFirestore<T extends SchemaBase>
+export interface FuseFirestore<S extends SchemaBase>
   extends admin.firestore.Firestore {
-  doc<P extends DocumentPaths<T>>(
-    path: P
-  ): admin.firestore.DocumentReference<GetData<T, P>>;
+  doc<P extends DocumentPaths<S>>(
+    path: P extends infer A ? A : never
+  ): admin.firestore.DocumentReference<DocumentData>;
+
+  collection<P extends CollectionPaths<S>>(
+    path: P extends infer A ? A : never
+  ): admin.firestore.CollectionReference<DocumentData>;
 }
 export const asFuse = <T extends SchemaBase>(DB: admin.firestore.Firestore) =>
   DB as FuseFirestore<T>;
