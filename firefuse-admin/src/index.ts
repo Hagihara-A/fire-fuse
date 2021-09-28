@@ -41,16 +41,20 @@ export type DocumentPaths<S extends SchemaBase> =
 export type GetData<
   S extends SchemaBase,
   P extends CollectionPaths<S> | DocumentPaths<S>
-> = P extends [infer C] | [infer C, string]
-  ? S[C & string]["doc"]
-  : P extends [infer C, string, ...infer Rest]
-  ? S[C & string]["subcollection"] extends SchemaBase
-    ? Rest extends
-        | CollectionPaths<S[C & string]["subcollection"]>
-        | DocumentPaths<S[C & string]["subcollection"]>
-      ? GetData<S[C & string]["subcollection"], Rest>
+> = P extends `${infer C}/${string}/${infer SC}`
+  ? S[C]["subcollection"] extends SchemaBase
+    ? SC extends
+        | CollectionPaths<S[C]["subcollection"]>
+        | DocumentPaths<S[C]["subcollection"]>
+      ? GetData<S[C]["subcollection"], SC>
       : never
     : never
+  : P extends `${infer C}/${string}`
+  ? C extends keyof S
+    ? S[C]["doc"]
+    : never
+  : P extends keyof S
+  ? S[P]["doc"]
   : never;
 
 type WhereFilterOp = FirebaseFirestore.WhereFilterOp;
@@ -129,12 +133,13 @@ export type Memory<T extends DocumentData> = {
 export interface FuseFirestore<S extends SchemaBase>
   extends admin.firestore.Firestore {
   doc<P extends DocumentPaths<S>>(
-    path: P extends infer A ? A : never
-  ): admin.firestore.DocumentReference<DocumentData>;
+    documentPath: P
+  ): admin.firestore.DocumentReference<GetData<S, P>>;
 
   collection<P extends CollectionPaths<S>>(
-    path: P extends infer A ? A : never
-  ): admin.firestore.CollectionReference<DocumentData>;
+    collectionPath: P
+  ): admin.firestore.CollectionReference<GetData<S, P>>;
 }
-export const asFuse = <T extends SchemaBase>(DB: admin.firestore.Firestore) =>
-  DB as FuseFirestore<T>;
+
+export const asFuse = <S extends SchemaBase>(DB: admin.firestore.Firestore) =>
+  DB as FuseFirestore<S>;
