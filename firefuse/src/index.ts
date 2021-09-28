@@ -82,7 +82,8 @@ export const doc = <S extends SchemaBase>(): Doc<S> => {
     ...paths: P | [string] | []
   ) => {
     if (DBorRef instanceof firestore.CollectionReference) {
-      return firestore.doc(DBorRef, paths.join("/"));
+      if (paths[0]) return firestore.doc(DBorRef, paths[0]);
+      else return firestore.doc(DBorRef);
     } else {
       return firestore.doc(
         DBorRef,
