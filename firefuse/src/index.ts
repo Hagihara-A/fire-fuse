@@ -62,38 +62,34 @@ export const collection =
       GetData<S, P>
     >;
 
-export const doc = <S extends SchemaBase>() => {
-  function d<P extends DocumentPaths<S>>(
+interface Doc<S extends SchemaBase> {
+  <P extends DocumentPaths<S>>(
     DB: firestore.Firestore,
     ...paths: P
   ): firestore.DocumentReference<GetData<S, P>>;
-
-  function d<T extends DocumentData>(
+  <T extends DocumentData>(
     collectionRef: firestore.CollectionReference<T>,
     ...id: [string] | []
   ): firestore.DocumentReference<T>;
+}
 
-  function d<
+export const doc = <S extends SchemaBase>(): Doc<S> => {
+  return <
     T extends DocumentData,
     P extends [string, string, ...string[]] & DocumentPaths<S>
   >(
     DBorRef: firestore.Firestore | firestore.CollectionReference<T>,
     ...paths: P | [string] | []
-  ) {
+  ) => {
     if (DBorRef instanceof firestore.CollectionReference) {
-      if (typeof paths[0] === "undefined") {
-        return firestore.doc(DBorRef);
-      } else {
-        return firestore.doc(DBorRef, paths[0]);
-      }
-    } else if (DBorRef instanceof firestore.Firestore) {
+      return firestore.doc(DBorRef, paths.join("/"));
+    } else {
       return firestore.doc(
         DBorRef,
         paths.join("/")
       ) as firestore.DocumentReference<GetData<S, P>>;
     }
-  }
-  return d;
+  };
 };
 
 export type ArrayOp = Extract<
