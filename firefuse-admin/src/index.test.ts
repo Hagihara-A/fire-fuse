@@ -1,9 +1,9 @@
-process.env.FIRESTORE_EMULATOR_HOST = "localhost:8080";
 import * as admin from "firebase-admin";
 import * as fuse from ".";
 
+admin.initializeApp({ projectId: "abc" });
 export const DB = fuse.asFuse<MySchema>(admin.firestore());
-type P = fuse.CollectionPaths<MySchema>;
+
 export type User = {
   name: string;
   age: number;
