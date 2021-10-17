@@ -1,8 +1,11 @@
-import * as admin from "firebase-admin";
+process.env.FIRESTORE_EMULATOR_HOST = "localhost:8080";
+
+import { initializeApp } from "firebase-admin/app";
+import * as firestore from "firebase-admin/firestore";
 import * as fuse from ".";
 
-admin.initializeApp({ projectId: "abc" });
-export const DB = fuse.asFuse<MySchema>(admin.firestore());
+const app = initializeApp({ projectId: "abc" });
+export const DB = fuse.asFuse<MySchema>(firestore.getFirestore(app));
 
 export type User = {
   name: string;
@@ -13,10 +16,10 @@ export type Payment = {
 };
 export type Room = {
   size: number;
-  rooms: {
-    living: number;
-    dining: number;
-    kitchen: number;
+  rooms?: {
+    living?: number;
+    dining?: number;
+    kitchen?: number;
   };
 };
 
@@ -65,7 +68,7 @@ export type Assert<T extends true> = T;
 
 describe("Add Data", () => {
   test("create docRef with specifing docId", async () => {
-    const LARef: admin.firestore.DocumentReference<City> = DB.doc("cities/LA");
+    const LARef: firestore.DocumentReference<City> = DB.doc("cities/LA");
     const data = {
       name: "Los Angeles",
       state: "CA",
@@ -78,7 +81,7 @@ describe("Add Data", () => {
   });
 
   test("create documentRef using collectionRef", async () => {
-    const newCityRef: admin.firestore.DocumentReference<City> =
+    const newCityRef: firestore.DocumentReference<City> =
       DB.collection("cities").doc();
     const data = {
       name: "Los Angeles",
@@ -92,7 +95,7 @@ describe("Add Data", () => {
 });
 describe("collection", () => {
   test("add nested collection & read", async () => {
-    const paymentRef: admin.firestore.CollectionReference<Payment> =
+    const paymentRef: firestore.CollectionReference<Payment> =
       DB.collection("user/a/payment");
     expect(paymentRef.path).toBe("user/a/payment");
     const payment: Payment = { cardNumber: 1234 };
@@ -146,7 +149,7 @@ describe("read data once", () => {
       regions: ["jingjinji", "hebei"],
     },
   };
-  const citiesRef: admin.firestore.CollectionReference<City> =
+  const citiesRef: firestore.CollectionReference<City> =
     DB.collection("cities");
 
   beforeAll(async () => {
@@ -156,7 +159,7 @@ describe("read data once", () => {
   });
 
   test("get one document", async () => {
-    const docRef: admin.firestore.DocumentReference<City> = DB.doc("cities/SF");
+    const docRef: firestore.DocumentReference<City> = DB.doc("cities/SF");
     const docSnap = await docRef.get();
     expect(docSnap.exists).toBeTruthy();
   });
