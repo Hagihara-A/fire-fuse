@@ -1,4 +1,4 @@
-import type admin from "firebase-admin";
+import * as firestore from "firebase-admin/firestore";
 import { FuseDocumentReference } from "./reference";
 
 export type FieldType =
@@ -6,7 +6,7 @@ export type FieldType =
   | number
   | boolean
   | null
-  | admin.firestore.Timestamp
+  | firestore.Timestamp
   | FieldType[]
   | DocumentData;
 
@@ -49,7 +49,7 @@ export type GetDocData<
       : never
     : never
   : P extends `${infer C}/${string}`
-  ? C extends keyof S
+  ? C extends StrKeyof<S>
     ? S[C]["doc"]
     : never
   : never;
@@ -142,13 +142,15 @@ export type Memory<T extends DocumentData> = {
 };
 
 export interface FuseFirestore<S extends SchemaBase>
-  extends admin.firestore.Firestore {
-  doc<P extends string>(documentPath: P): FuseDocumentReference<GetDocData<S, P>>;
+  extends firestore.Firestore {
+  doc<P extends string>(documentPath: P): firestore.DocumentReference<GetDocData<S, P>>;
 
   collection<P extends string>(
     collectionPath: P
-  ): admin.firestore.CollectionReference<GetColData<S, P>>;
+  ): firestore.CollectionReference<GetColData<S, P>>;
 }
 
-export const asFuse = <S extends SchemaBase>(DB: admin.firestore.Firestore) =>
+export const asFuse = <S extends SchemaBase>(DB: firestore.Firestore) =>
   DB as FuseFirestore<S>;
+
+  type A<S extends SchemaBase, P extends string> = FuseDocumentReference<GetDocData<S, P>>
