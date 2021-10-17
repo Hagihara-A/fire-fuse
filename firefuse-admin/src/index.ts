@@ -1,4 +1,5 @@
-import admin from "firebase-admin";
+import type admin from "firebase-admin";
+import { FuseDocumentReference } from "./reference";
 
 export type FieldType =
   | string
@@ -38,25 +39,35 @@ export type CollectionPaths<S extends SchemaBase> = {
 export type DocumentPaths<S extends SchemaBase> =
   `${CollectionPaths<S>}/${string}`;
 
-export type GetData<
+export type GetDocData<
   S extends SchemaBase,
-  P extends CollectionPaths<S> | DocumentPaths<S>
+  P extends string
 > = P extends `${infer C}/${string}/${infer SC}`
-  ? S[C]["subcollection"] extends SchemaBase
-    ? SC extends
-        | CollectionPaths<S[C]["subcollection"]>
-        | DocumentPaths<S[C]["subcollection"]>
-      ? GetData<S[C]["subcollection"], SC>
+  ? C extends keyof S
+    ? S[C]["subcollection"] extends SchemaBase
+      ? GetDocData<S[C]["subcollection"], SC>
       : never
     : never
   : P extends `${infer C}/${string}`
   ? C extends keyof S
     ? S[C]["doc"]
     : never
+  : never;
+
+export type GetColData<
+  S extends SchemaBase,
+  P extends string // not to use Document/CollectionPaths for avoiding recursion error
+> = P extends `${infer C}/${string}/${infer SC}`
+  ? C extends keyof S
+    ? S[C]["subcollection"] extends SchemaBase
+      ? GetColData<S[C]["subcollection"], SC>
+      : never
+    : never
+  : P extends `${string}/${string}`
+  ? never
   : P extends keyof S
   ? S[P]["doc"]
   : never;
-
 type WhereFilterOp = FirebaseFirestore.WhereFilterOp;
 
 export type ArrayOp = Extract<
@@ -132,13 +143,11 @@ export type Memory<T extends DocumentData> = {
 
 export interface FuseFirestore<S extends SchemaBase>
   extends admin.firestore.Firestore {
-  doc<P extends DocumentPaths<S>>(
-    documentPath: P
-  ): admin.firestore.DocumentReference<GetData<S, P>>;
+  doc<P extends string>(documentPath: P): FuseDocumentReference<GetDocData<S, P>>;
 
-  collection<P extends CollectionPaths<S>>(
+  collection<P extends string>(
     collectionPath: P
-  ): admin.firestore.CollectionReference<GetData<S, P>>;
+  ): admin.firestore.CollectionReference<GetColData<S, P>>;
 }
 
 export const asFuse = <S extends SchemaBase>(DB: admin.firestore.Firestore) =>
