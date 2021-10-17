@@ -10,7 +10,7 @@
     "prepublishOnly": "npm run build && npm pack"
   },
   "peerDependencies": {
-    "firebase-admin": "^9.11.1"
+    "firebase-admin": "^10.0.0"
   },
   "devDependencies": {
     "@types/jest": "^27.0.2",
