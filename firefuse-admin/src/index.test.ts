@@ -1,11 +1,10 @@
 process.env.FIRESTORE_EMULATOR_HOST = "localhost:8080";
 
-import { initializeApp } from "firebase-admin/app";
-import * as firestore from "firebase-admin/firestore";
+import * as admin from "firebase-admin";
 import * as fuse from ".";
 
-const app = initializeApp({ projectId: "abc" });
-export const DB = fuse.asFuse<MySchema>(firestore.getFirestore(app));
+const app = admin.initializeApp({ projectId: "abc" });
+export const DB = fuse.asFuse<MySchema>(admin.firestore(app));
 
 export type User = {
   name: string;
@@ -68,7 +67,7 @@ export type Assert<T extends true> = T;
 
 describe("Add Data", () => {
   test("create docRef with specifing docId", async () => {
-    const LARef: firestore.DocumentReference<City> = DB.doc("cities/LA");
+    const LARef = DB.doc("cities/LA");
     const data = {
       name: "Los Angeles",
       state: "CA",
@@ -81,8 +80,7 @@ describe("Add Data", () => {
   });
 
   test("create documentRef using collectionRef", async () => {
-    const newCityRef: firestore.DocumentReference<City> =
-      DB.collection("cities").doc();
+    const newCityRef = DB.collection("cities").doc();
     const data = {
       name: "Los Angeles",
       state: "CA",
@@ -95,8 +93,7 @@ describe("Add Data", () => {
 });
 describe("collection", () => {
   test("add nested collection & read", async () => {
-    const paymentRef: firestore.CollectionReference<Payment> =
-      DB.collection("user/a/payment");
+    const paymentRef = DB.collection("user/a/payment");
     expect(paymentRef.path).toBe("user/a/payment");
     const payment: Payment = { cardNumber: 1234 };
     const docRef = await paymentRef.add(payment);
@@ -149,8 +146,7 @@ describe("read data once", () => {
       regions: ["jingjinji", "hebei"],
     },
   };
-  const citiesRef: firestore.CollectionReference<City> =
-    DB.collection("cities");
+  const citiesRef = DB.collection("cities");
 
   beforeAll(async () => {
     for (const [k, v] of Object.entries(addDataEntries)) {
@@ -159,7 +155,7 @@ describe("read data once", () => {
   });
 
   test("get one document", async () => {
-    const docRef: firestore.DocumentReference<City> = DB.doc("cities/SF");
+    const docRef = DB.doc("cities/SF");
     const docSnap = await docRef.get();
     expect(docSnap.exists).toBeTruthy();
   });
