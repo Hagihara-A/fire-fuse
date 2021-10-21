@@ -1,6 +1,6 @@
 import * as firestore from "firebase/firestore";
 
-import { DocumentData, KeyofPrimitive } from "..";
+import { DocumentData, KeyofPrimitive } from "../index.js";
 
 export const orderBy = <T extends DocumentData>() => {
   return <F extends KeyofPrimitive<T> & string>(

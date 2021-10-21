@@ -1,6 +1,6 @@
 import * as firestore from "firebase/firestore";
-import { CollectionPaths } from "./collection";
-import { DocumentPaths } from "./doc";
+import { CollectionPaths } from "./collection.js";
+import { DocumentPaths } from "./doc.js";
 
 export type FieldType =
   | string
@@ -55,9 +55,9 @@ export type KeyofPrimitive<
 
 export type ExcUndef<T> = Exclude<T, undefined>;
 
-export * from "./doc";
-export * from "./collection";
-export * from "./query";
-export * from "./constraint/orderby";
-export * from "./constraint/where";
-export * from "./constraint/other";
+export * from "./doc.js";
+export * from "./collection.js";
+export * from "./query.js";
+export * from "./constraint/orderby.js";
+export * from "./constraint/where.js";
+export * from "./constraint/other.js";
