@@ -2,7 +2,7 @@ import * as firestore from "firebase/firestore";
 import { SchemaBase, GetData, DocumentData } from "./index.js";
 import { CollectionPaths } from "./collection.js";
 
-interface Doc<S extends SchemaBase> {
+export interface Doc<S extends SchemaBase> {
   <P extends DocumentPaths<S>>(
     DB: firestore.Firestore,
     ...paths: P

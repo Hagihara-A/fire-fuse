@@ -53,8 +53,8 @@ export type City = {
   regions?: string[];
 };
 
-export type Extends<E, A> = A extends E ? true : false;
-export type NotExtends<E, A> = A extends E ? false : true;
+export type Extends<A, E> = A extends E ? true : false;
+export type NotExtends<A, E> = A extends E ? false : true;
 export type Exact<A, B> = Extends<A, B> extends true
   ? Extends<B, A> extends true
     ? true
@@ -204,7 +204,10 @@ describe("read data once", () => {
     test(`where("regions", "array-contains", "west_coast") is OK`, async () => {
       const w = where("regions", "array-contains", "west_coast");
       type _ = Assert<
-        Extends<{ _field: string; _op: string; _value: string }, typeof w>
+        Extends<
+          typeof w,
+          { _field: "regions"; _op: "array-contains"; _value: string }
+        >
       >;
       type __ = Assert<
         Extends<
