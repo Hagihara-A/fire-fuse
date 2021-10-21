@@ -12,7 +12,7 @@ export type FieldType =
   | DocumentData;
 
 export interface DocumentData {
-  readonly [K: string]: FieldType | undefined;
+  readonly [K: string]: FieldType;
 }
 
 export type StrKeyof<T> = keyof T & string;
@@ -26,10 +26,12 @@ export interface SchemaBase {
 export type Collection<
   T extends DocumentData,
   SC extends SchemaBase | undefined = undefined
-> = {
-  doc: T;
-  subcollection: SC;
-};
+> = SC extends undefined
+  ? { doc: T }
+  : {
+      doc: T;
+      subcollection: SC;
+    };
 
 export type GetData<
   S extends SchemaBase,
@@ -54,6 +56,11 @@ export type KeyofPrimitive<
 }[K];
 
 export type ExcUndef<T> = Exclude<T, undefined>;
+
+export type Defined<T extends DocumentData, K extends StrKeyof<T>> = T &
+  { [L in K]-?: ExcUndef<T[K]> };
+
+export type Merge<T extends DocumentData> = { [K in keyof T]: T[K] };
 
 export * from "./doc.js";
 export * from "./collection.js";

@@ -1,8 +1,8 @@
 import * as firestore from "firebase/firestore";
-import { DocumentData, ExcUndef, StrKeyof } from "./index.js";
+import { Defined, DocumentData, ExcUndef, Merge, StrKeyof } from "./index.js";
 import { OrderByConstraint } from "./constraint/orderby.js";
 import { OtherConstraints } from "./constraint/other.js";
-import { WhereConstraint, Defined, OR, OverWrite, GreaterOrLesserOp } from "./constraint/where.js";
+import { WhereConstraint, GreaterOrLesserOp } from "./constraint/where.js";
 
 export const query = <
   T extends DocumentData,
@@ -12,7 +12,7 @@ export const query = <
   ...queryConstraints: CS
 ) => {
   return firestore.query(query, ...queryConstraints) as firestore.Query<
-    ConstrainedData<T, CS>
+    Merge<ConstrainedData<T, CS>>
   >;
 };
 
@@ -26,6 +26,7 @@ export type Memory<T extends DocumentData> = {
   prevOr: boolean;
   prevOrderBy: boolean;
 };
+
 export type ConstrainedData<
   T extends DocumentData,
   C extends readonly firestore.QueryConstraint[],
@@ -41,38 +42,38 @@ export type ConstrainedData<
   ? T
   : C extends readonly [infer H, ...infer Rest]
   ? Rest extends readonly firestore.QueryConstraint[]
-    ? H extends WhereConstraint<infer U, infer K, infer OP, infer V>
+    ? H extends WhereConstraint<infer U, infer F, infer OP, infer V>
       ? T extends U
         ? OP extends GreaterOrLesserOp
-          ? K extends Mem["rangeField"]
-            ? ConstrainedData<Defined<T, K>, Rest, Mem & { rangeField: K }>
+          ? F extends Mem["rangeField"]
+            ? ConstrainedData<Defined<T, F>, Rest, Mem & { rangeField: F }>
             : never
           : OP extends "=="
           ? ConstrainedData<
-              T & { [L in K]-?: V },
+              T & { [L in F]-?: V },
               Rest,
-              OR<Mem, { eqField: K }>
+              OR<Mem, { eqField: F }>
             >
           : OP extends "!="
           ? Mem["prevNot"] extends true
             ? never
-            : K extends Mem["rangeField"]
+            : F extends Mem["rangeField"]
             ? ConstrainedData<
                 T &
                   {
-                    [L in K]-?: T[L] extends V
+                    [L in F]-?: T[L] extends V
                       ? T[L]
                       : Exclude<T[L], V | undefined>;
                   },
                 Rest,
-                OverWrite<Mem, { prevNot: true }> & { rangeField: K }
+                OverWrite<Mem, { prevNot: true }> & { rangeField: F }
               >
             : never
           : OP extends "array-contains"
           ? Mem["prevArrcon"] extends true
             ? never
             : ConstrainedData<
-                Defined<T, K>,
+                Defined<T, F>,
                 Rest,
                 OverWrite<Mem, { prevArrcon: true }>
               >
@@ -82,18 +83,18 @@ export type ConstrainedData<
             : Mem["prevOr"] extends true
             ? never
             : ConstrainedData<
-                Defined<T, K>,
+                Defined<T, F>,
                 Rest,
                 OverWrite<Mem, { prevArrcon: true; prevOr: true }>
               >
           : OP extends "in"
           ? Mem["prevOr"] extends true
             ? never
-            : V extends readonly T[K][]
+            : V extends readonly T[F][]
             ? ConstrainedData<
-                T & { [L in K]-?: V[number] },
+                T & { [L in F]-?: V[number] },
                 Rest,
-                OR<OverWrite<Mem, { prevOr: true }>, { eqField: K }>
+                OR<OverWrite<Mem, { prevOr: true }>, { eqField: F }>
               >
             : never
           : OP extends "not-in"
@@ -101,12 +102,12 @@ export type ConstrainedData<
             ? never
             : Mem["prevNot"] extends true
             ? never
-            : K extends Mem["rangeField"]
-            ? V extends readonly T[K][]
+            : F extends Mem["rangeField"]
+            ? V extends readonly T[F][]
               ? ConstrainedData<
                   T &
                     {
-                      [L in K]-?: T[L] extends V[number]
+                      [L in F]-?: T[L] extends V[number]
                         ? ExcUndef<T[L]>
                         : Exclude<T[L], V[number] | undefined>;
                     },
@@ -132,3 +133,13 @@ export type ConstrainedData<
       : never
     : never
   : never;
+
+export type OR<T, U extends { [K in keyof T]?: unknown }> = {
+  [K in keyof T]: K extends keyof U ? T[K] | U[K] : T[K];
+};
+export type OverWrite<
+  T extends DocumentData,
+  U extends { [K in keyof T]?: unknown }
+> = {
+  [K in keyof T]: K extends keyof U ? U[K] : T[K];
+};

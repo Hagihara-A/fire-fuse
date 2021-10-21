@@ -27,22 +27,9 @@ export interface WhereConstraint<
   readonly type: Extract<firestore.QueryConstraintType, "where">;
   _field: F;
   _op: OP;
-  _value: ExcUndef<V>;
+  _value: V;
 }
 
-export type OR<T, U extends { [K in keyof T]?: unknown }> = {
-  [K in keyof T]: K extends keyof U ? T[K] | U[K] : T[K];
-};
-
-export type OverWrite<
-  T extends DocumentData,
-  U extends { [K in keyof T]?: unknown }
-> = {
-  [K in keyof T]: K extends keyof U ? U[K] : T[K];
-};
-
-export type Defined<T extends DocumentData, K extends StrKeyof<T>> = T &
-  { [L in K]-?: ExcUndef<T[K]> };
 type CommonOp = Extract<firestore.WhereFilterOp, "in" | "not-in" | "==" | "!=">;
 
 export type GreaterOrLesserOp = Extract<
@@ -54,29 +41,28 @@ export type LegalValue<
   F extends StrKeyof<T>,
   OP extends LegalOperation<T, F>
 > = OP extends "!=" | "=="
-  ? ExcUndef<T[F]>
+  ? T[F]
   : OP extends "in" | "not-in"
-  ? ExcUndef<T[F]>[]
+  ? T[F][]
   : OP extends GreaterOrLesserOp
-  ? ExcUndef<T[F]> extends UnPrimitive
+  ? T[F] extends UnPrimitive
     ? never
-    : ExcUndef<T[F]>
+    : T[F]
   : OP extends "array-contains-any"
-  ? ExcUndef<T[F]> extends (infer E)[]
+  ? T[F] extends (infer E)[]
     ? E[]
     : never
   : OP extends "array-contains"
-  ? ExcUndef<T[F]> extends (infer E)[]
+  ? T[F] extends (infer E)[]
     ? E
     : never
   : never;
 
-type LegalOperation<T extends DocumentData, F extends StrKeyof<T>> =
-  | (T[F] extends DocumentData
+export type LegalOperation<T extends DocumentData, F extends StrKeyof<T>> =
+  | (ExcUndef<T[F]> extends DocumentData
       ? never
-      : Exclude<T[F], undefined> extends FieldType[]
+      : ExcUndef<T[F]> extends FieldType[]
       ? ArrayOp
       : GreaterOrLesserOp)
   | CommonOp;
 type UnPrimitive = DocumentData | FieldType[];
-
