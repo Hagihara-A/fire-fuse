@@ -54,9 +54,13 @@ export type City = {
   regions?: string[];
 };
 
-export type Extends<A, E> = A extends E ? true : false;
-export type NotExtends<A, E> = A extends E ? false : true;
-export type Exact<A, B> = A extends B ? (B extends A ? true : false) : false;
+export type Extends<A, E> = [A] extends [E] ? true : false;
+export type NotExtends<A, E> = [A] extends [E] ? false : true;
+export type Exact<A, B> = [A] extends [B]
+  ? [B] extends [A]
+    ? true
+    : false
+  : false;
 export type Match<E, A extends E> = Exact<E, Pick<A, keyof E>>;
 export type Never<T> = T extends never ? true : false;
 
