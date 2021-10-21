@@ -10,17 +10,17 @@ test(`Defined<{a?: string}, "a"> is {a: string}`, () => {
 describe(`LegalOperation`, () => {
   test(`"array-contains" extends LegalOperation<City, "regions">`, () => {
     type T = LegalOperation<City, "regions">;
-    type _ = Assert<Extends<T, "array-contains">>;
+    type _ = Assert<Extends<"array-contains", T>>;
   });
   test(`"array-contains-any" extends LegalOperation<City, "regions">`, () => {
     type T = LegalOperation<City, "regions">;
-    type _ = Assert<Extends<T, "array-contains-any">>;
+    type _ = Assert<Extends<"array-contains-any", T>>;
   });
 });
 
 describe(`LegaolValue`, () => {
-  test(`string extends LegalValue<City, "regions", "array-contains">`, () => {
+  test(`string exact LegalValue<City, "regions", "array-contains">`, () => {
     type T = LegalValue<City, "regions", "array-contains">;
-    type _ = Assert<Extends<T, string>>;
+    type _ = Assert<Exact<T, string>>;
   });
 });
