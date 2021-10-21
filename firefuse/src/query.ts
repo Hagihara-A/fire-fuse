@@ -1,8 +1,8 @@
 import * as firestore from "firebase/firestore";
-import { DocumentData, ExcUndef, StrKeyof } from ".";
-import { OrderByConstraint } from "./constraint/orderby";
-import { OtherConstraints } from "./constraint/other";
-import { WhereConstraint, Defined, OR, OverWrite, GreaterOrLesserOp } from "./constraint/where";
+import { DocumentData, ExcUndef, StrKeyof } from "./index.js";
+import { OrderByConstraint } from "./constraint/orderby.js";
+import { OtherConstraints } from "./constraint/other.js";
+import { WhereConstraint, Defined, OR, OverWrite, GreaterOrLesserOp } from "./constraint/where.js";
 
 export const query = <
   T extends DocumentData,

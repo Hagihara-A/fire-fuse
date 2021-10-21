@@ -1,6 +1,6 @@
 import * as fs from "firebase/firestore";
-import * as fuse from ".";
-import { ConstrainedData as CD } from ".";
+import * as fuse from "./index.js";
+import { ConstrainedData as CD } from "./index.js";
 import {
   Assert,
   City,

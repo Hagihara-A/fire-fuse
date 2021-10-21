@@ -1,5 +1,5 @@
 import * as firestore from "firebase/firestore";
-import { SchemaBase, GetData } from ".";
+import { SchemaBase, GetData } from "./index.js";
 
 export const collection =
   <S extends SchemaBase>() =>
