@@ -40,21 +40,23 @@ export type LegalValue<
   T extends DocumentData,
   F extends StrKeyof<T>,
   OP extends LegalOperation<T, F>
-> = OP extends "!=" | "=="
-  ? T[F]
-  : OP extends "in" | "not-in"
-  ? T[F][]
-  : OP extends GreaterOrLesserOp
-  ? T[F] extends UnPrimitive
-    ? never
-    : T[F]
-  : OP extends "array-contains-any"
-  ? T[F] extends (infer E)[]
-    ? E[]
-    : never
-  : OP extends "array-contains"
-  ? T[F] extends (infer E)[]
-    ? E
+> = ExcUndef<T[F]> extends infer V
+  ? OP extends "!=" | "=="
+    ? V
+    : OP extends "in" | "not-in"
+    ? V[]
+    : OP extends GreaterOrLesserOp
+    ? V extends UnPrimitive
+      ? never
+      : V
+    : OP extends "array-contains-any"
+    ? V extends (infer E)[]
+      ? E[]
+      : never
+    : OP extends "array-contains"
+    ? V extends (infer E)[]
+      ? E
+      : never
     : never
   : never;
 
