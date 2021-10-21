@@ -1,5 +1,5 @@
 import * as fs from "firebase/firestore";
-import * as fuse from ".";
+import * as fuse from "./index.js";
 import { initializeApp } from "firebase/app";
 
 const app = initializeApp({ projectId: "pid" });

@@ -1,5 +1,5 @@
 import * as firestore from "firebase/firestore";
-import { DocumentData, StrKeyof, FieldType, ExcUndef } from "..";
+import { DocumentData, StrKeyof, FieldType, ExcUndef } from "../index.js";
 
 export const where = <T extends DocumentData>() => {
   return <
