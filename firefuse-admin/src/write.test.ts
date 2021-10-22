@@ -1,6 +1,6 @@
 import { DocumentReference } from "firebase-admin/firestore";
 import { Assert, DB, Extends, Match, Room } from "./index.test";
-import { UpdateData, UpdateValue } from "./reference";
+import { UpdateData } from "./update.js";
 
 describe("update", () => {
   describe("UpdateData", () => {
@@ -18,7 +18,7 @@ describe("update", () => {
   });
 
   test("update top-level data", async () => {
-    const city = DB.doc("rooms/abc");
+    const city = DB.doc("room/abc");
     await city.update({ "rooms.living": 7 });
   });
 });

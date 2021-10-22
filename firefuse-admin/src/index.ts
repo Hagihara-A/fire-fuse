@@ -1,5 +1,7 @@
 import * as firestore from "firebase-admin/firestore";
-import { FuseDocumentReference } from "./reference";
+import { CollectionPaths } from "./collection.js";
+import { DocumentPaths } from "./doc.js";
+import { FuseDocumentReference } from "./reference.js";
 
 export type FieldType =
   | string
@@ -11,7 +13,7 @@ export type FieldType =
   | DocumentData;
 
 export interface DocumentData {
-  readonly [K: string]: FieldType | undefined;
+  readonly [K: string]: FieldType;
 }
 
 export type StrKeyof<T> = keyof T & string;
@@ -25,97 +27,14 @@ export interface SchemaBase {
 export type Collection<
   T extends DocumentData,
   SC extends SchemaBase | undefined = undefined
-> = {
-  doc: T;
-  subcollection: SC;
-};
+> = SC extends undefined
+  ? { doc: T }
+  : {
+      doc: T;
+      subcollection: SC;
+    };
 
-export type CollectionPaths<S extends SchemaBase> = {
-  [K in StrKeyof<S>]: S[K]["subcollection"] extends SchemaBase
-    ? `${K}` | `${K}/${string}/${CollectionPaths<S[K]["subcollection"]>}`
-    : `${K}`;
-}[StrKeyof<S>];
-
-export type DocumentPaths<S extends SchemaBase> =
-  `${CollectionPaths<S>}/${string}`;
-
-export type GetDocData<
-  S extends SchemaBase,
-  P extends string
-> = P extends `${infer C}/${string}/${infer SC}`
-  ? C extends keyof S
-    ? S[C]["subcollection"] extends SchemaBase
-      ? GetDocData<S[C]["subcollection"], SC>
-      : never
-    : never
-  : P extends `${infer C}/${string}`
-  ? C extends StrKeyof<S>
-    ? S[C]["doc"]
-    : never
-  : never;
-
-export type GetColData<
-  S extends SchemaBase,
-  P extends string // not to use Document/CollectionPaths for avoiding recursion error
-> = P extends `${infer C}/${string}/${infer SC}`
-  ? C extends keyof S
-    ? S[C]["subcollection"] extends SchemaBase
-      ? GetColData<S[C]["subcollection"], SC>
-      : never
-    : never
-  : P extends `${string}/${string}`
-  ? never
-  : P extends keyof S
-  ? S[P]["doc"]
-  : never;
-type WhereFilterOp = FirebaseFirestore.WhereFilterOp;
-
-export type ArrayOp = Extract<
-  WhereFilterOp,
-  "array-contains" | "array-contains-any"
->;
-
-export type KeyofPrimitive<
-  T extends DocumentData,
-  K extends keyof T = keyof T
-> = {
-  [L in K]: T[L] extends FieldType[] | DocumentData ? never : L;
-}[K];
-
-type UnPrimitive = DocumentData | FieldType[];
-type CommonOp = Extract<WhereFilterOp, "in" | "not-in" | "==" | "!=">;
-type ExcUndef<T> = Exclude<T, undefined>;
-type GreaterOrLesserOp = Extract<WhereFilterOp, "<" | "<=" | ">" | ">=">;
-export type LegalValue<
-  T extends DocumentData,
-  F extends StrKeyof<T>,
-  OP extends LegalOperation<T, F>
-> = OP extends "!=" | "=="
-  ? ExcUndef<T[F]>
-  : OP extends "in" | "not-in"
-  ? ExcUndef<T[F]>[]
-  : OP extends GreaterOrLesserOp
-  ? ExcUndef<T[F]> extends UnPrimitive
-    ? never
-    : ExcUndef<T[F]>
-  : OP extends "array-contains-any"
-  ? ExcUndef<T[F]> extends (infer E)[]
-    ? E[]
-    : never
-  : OP extends "array-contains"
-  ? ExcUndef<T[F]> extends (infer E)[]
-    ? E
-    : never
-  : never;
-
-type LegalOperation<T extends DocumentData, F extends StrKeyof<T>> =
-  | (T[F] extends DocumentData
-      ? never
-      : Exclude<T[F], undefined> extends FieldType[]
-      ? ArrayOp
-      : GreaterOrLesserOp)
-  | CommonOp;
-
+export type ExcUndef<T> = Exclude<T, undefined>;
 export type OR<T, U extends { [K in keyof T]?: unknown }> = {
   [K in keyof T]: K extends keyof U ? T[K] | U[K] : T[K];
 };
@@ -130,8 +49,8 @@ export type OverWrite<
 export type Defined<T extends DocumentData, K extends StrKeyof<T>> = T &
   { [L in K]-?: ExcUndef<T[K]> };
 
-// // クエリかけたフィールドが存在する
-// // 不正なクエリならnever
+// クエリかけたフィールドが存在する
+// 不正なクエリならnever
 export type Memory<T extends DocumentData> = {
   rangeField: StrKeyof<T>;
   eqField: StrKeyof<T>;
@@ -143,14 +62,42 @@ export type Memory<T extends DocumentData> = {
 
 export interface FuseFirestore<S extends SchemaBase>
   extends firestore.Firestore {
-  doc<P extends string>(documentPath: P): firestore.DocumentReference<GetDocData<S, P>>;
+  doc<P extends Join<DP, "/">, DP extends DocumentPaths<S>>(
+    documentPath: P
+  ): FuseDocumentReference<GetData<S, DP>>;
 
-  collection<P extends string>(
+  collection<P extends Join<CP, "/">, CP extends CollectionPaths<S>>(
     collectionPath: P
-  ): firestore.CollectionReference<GetColData<S, P>>;
+  ): firestore.CollectionReference<GetData<S, CP>>;
 }
 
 export const asFuse = <S extends SchemaBase>(DB: firestore.Firestore) =>
   DB as FuseFirestore<S>;
 
-  type A<S extends SchemaBase, P extends string> = FuseDocumentReference<GetDocData<S, P>>
+export type Join<P extends string[], Sep extends string> = P extends [
+  infer Head,
+  ...infer Rest
+]
+  ? Head extends string
+    ? Rest extends []
+      ? Head
+      : Rest extends string[]
+      ? `${Head}${Sep}${Join<Rest, Sep>}`
+      : never
+    : never
+  : never;
+
+export type GetData<
+  S extends SchemaBase,
+  P extends CollectionPaths<S> | DocumentPaths<S>
+> = P extends [infer C] | [infer C, string]
+  ? S[C & string]["doc"]
+  : P extends [infer C, string, ...infer Rest]
+  ? S[C & string]["subcollection"] extends SchemaBase
+    ? Rest extends
+        | CollectionPaths<S[C & string]["subcollection"]>
+        | DocumentPaths<S[C & string]["subcollection"]>
+      ? GetData<S[C & string]["subcollection"], Rest>
+      : never
+    : never
+  : never;
