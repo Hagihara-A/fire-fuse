@@ -1,6 +1,7 @@
 import * as fs from "firebase/firestore";
 import * as fuse from "./index.js";
 import { initializeApp } from "firebase/app";
+import { Defined } from "./index.js";
 
 const app = initializeApp({ projectId: "pid" });
 export const DB = fs.getFirestore(app);
@@ -53,10 +54,10 @@ export type City = {
   regions?: string[];
 };
 
-export type Extends<A, E> = A extends E ? true : false;
-export type NotExtends<A, E> = A extends E ? false : true;
-export type Exact<A, B> = Extends<A, B> extends true
-  ? Extends<B, A> extends true
+export type Extends<A, E> = [A] extends [E] ? true : false;
+export type NotExtends<A, E> = [A] extends [E] ? false : true;
+export type Exact<A, B> = [A] extends [B]
+  ? [B] extends [A]
     ? true
     : false
   : false;
@@ -65,70 +66,11 @@ export type Never<T> = T extends never ? true : false;
 
 export type Assert<T extends true> = T;
 
-export const collection = fuse.collection<MySchema>();
-export const doc = fuse.doc<MySchema>();
-const { query } = fuse;
-export { query };
-
 afterAll(async () => {
   await fs.terminate(DB);
 });
-test("confirm is emulator running", async () => {
-  const colRef = fs.collection(DB, "a/b/c");
-  expect(colRef.id).toBe("c");
-  expect(colRef.parent?.parent.id).toBe("a");
-  const data = { test: "test" };
-  const doc = await fs.addDoc(colRef, data);
 
-  const savedRef = await fs.getDoc(doc);
-  expect(savedRef.data()).toEqual(data);
-});
-
-describe("Add Data", () => {
-  test("create docRef with specifing docId", async () => {
-    const LARef: fs.DocumentReference<City> = doc(DB, "cities", "LA");
-    const data = {
-      name: "Los Angeles",
-      state: "CA",
-      country: "USA",
-    };
-    await fs.setDoc(LARef, data);
-    const LASS = await fs.getDoc(LARef);
-    expect(LASS.data()).toEqual(data);
-  });
-
-  test("create documentRef using collectionRef", async () => {
-    const newCityRef: fs.DocumentReference<City> = doc(
-      collection(DB, "cities")
-    );
-    const data = {
-      name: "Los Angeles",
-      state: "CA",
-      country: "USA",
-    };
-    await fs.setDoc(newCityRef, data);
-    const savedDoc = await fs.getDoc(newCityRef);
-    expect(savedDoc.data()).toEqual(data);
-  });
-});
-describe("collection", () => {
-  test("add nested collection & read", async () => {
-    const paymentRef: fs.CollectionReference<Payment> = collection(
-      DB,
-      "user",
-      "a",
-      "payment"
-    );
-    expect(paymentRef.path).toBe("user/a/payment");
-    const payment: Payment = { cardNumber: 1234 };
-    const docRef = await fs.addDoc(paymentRef, payment);
-
-    const savedDoc = await fs.getDoc(docRef);
-    expect(savedDoc.data()).toEqual(payment);
-  });
-});
-
-describe("read data once", () => {
+beforeAll(async () => {
   const addDataEntries: Record<string, City> = {
     SF: {
       name: "San Francisco",
@@ -171,137 +113,13 @@ describe("read data once", () => {
       regions: ["jingjinji", "hebei"],
     },
   };
-  const citiesRef: fs.CollectionReference<City> = collection(DB, "cities");
-
-  beforeAll(async () => {
-    for (const [k, v] of Object.entries(addDataEntries)) {
-      await fs.setDoc(doc(citiesRef, k), v);
-    }
-  });
-
-  test("get one document", async () => {
-    const docRef: fs.DocumentReference<City> = doc(DB, "cities", "SF");
-    const docSnap = await fs.getDoc(docRef);
-    expect(docSnap.exists()).toBeTruthy();
-  });
-
-  describe("where", () => {
-    const where = fuse.where<City>();
-
-    test("use fuse.where with firestore.query", () => {
-      fs.query(collection(DB, "user"), where("capital", "==", true));
-    });
-
-    test("where(capital, ==, true) is OK", async () => {
-      const c = where("capital", "==", true);
-      const q = query(collection(DB, "cities"), c);
-
-      const querySnapshot = await fs.getDocs(q);
-      querySnapshot.forEach((doc) => {
-        expect(doc.data()).toEqual(addDataEntries[doc.id]);
-      });
-    });
-    test(`where("regions", "array-contains", "west_coast") is OK`, async () => {
-      const w = where("regions", "array-contains", "west_coast");
-      type _ = Assert<
-        Extends<
-          typeof w,
-          { _field: "regions"; _op: "array-contains"; _value: string }
-        >
-      >;
-      type __ = Assert<
-        Extends<
-          fuse.WhereConstraint<City, "regions", "array-contains", string>,
-          typeof w
-        >
-      >;
-      const q = query(collection(DB, "cities"), w);
-      const docs = await fs.getDocs(q);
-      expect(
-        docs.docs.every((doc) => doc.data().regions?.includes("west_coast"))
-      ).toBeTruthy();
-    });
-
-    test(`where("country", "in", ["USA", "Japan"]) is OK`, async () => {
-      const c = where("country", "in", ["USA", "Japan"] as const);
-      const q = query(collection(DB, "cities"), c);
-      const querySS = await fs.getDocs(q);
-      querySS.forEach((ss) => {
-        expect(["USA", "Japan"]).toContain(ss.data().country);
-      });
-    });
-
-    test(`get cities where("country", "not-in", ["USA", "Japan"])`, async () => {
-      const q = fs.query(
-        collection(DB, "cities"),
-        where("country", "not-in", ["USA", "Japan"])
-      );
-      const querySS = await fs.getDocs(q);
-      querySS.forEach((ss) => {
-        expect(["USA", "Japan"]).not.toContain(ss.data().country);
-      });
-    });
-
-    test(`get cities where("regions", "array-contains-any", ["west_coast", "east_coast"])`, async () => {
-      const q = query(
-        collection(DB, "cities"),
-        where("regions", "array-contains-any", ["west_coast", "east_coast"])
-      );
-      const querySS = await fs.getDocs(q);
-      querySS.forEach((ss) => {
-        const regions = ss.data().regions;
-        expect(
-          regions?.includes("west_coast") || regions?.includes("east_coast")
-        ).toBeTruthy();
-      });
-    });
-  });
-
-  describe("orderBy", () => {
-    const citiesRef: fs.CollectionReference<City> = collection(DB, "cities");
-    const orderBy = fuse.orderBy<City>();
-    test(`get cities orderBy("population")`, async () => {
-      const q = query(citiesRef, orderBy("population"));
-      const querySS = await fs.getDocs(q);
-      let prev = 0;
-      querySS.forEach((ss) => {
-        const population = ss.data().population;
-        expect(population).toBeGreaterThanOrEqual(prev);
-        prev = population ?? prev;
-      });
-    });
-
-    test(`get cities orderBy("population")`, async () => {
-      const q = fs.query(citiesRef, orderBy("population", "desc"));
-      const querySS = await fs.getDocs(q);
-      let prev = 100000000;
-      querySS.forEach((ss) => {
-        const population = ss.data().population;
-        expect(population).toBeLessThanOrEqual(prev);
-        prev = population ?? prev;
-      });
-    });
-  });
+  const batch = fs.writeBatch(DB);
+  for (const [k, ent] of Object.entries(addDataEntries)) {
+    batch.set(fs.doc(fs.collection(DB, "cities")), ent);
+  }
+  await batch.commit();
 });
-
-describe("LegalValue", () => {
-  test("(string | null)[] array-contains string | null", () => {
-    type T = {
-      a: (string | null)[];
-    };
-    type W = fuse.LegalValue<T, "a", "array-contains">;
-    type _ = Assert<Extends<T["a"][number], W>>;
-  });
-  test("(string | null)[]| undefined array-contains string | null", () => {
-    type T = {
-      a?: (string | null)[];
-    };
-    type W = fuse.LegalValue<T, "a", "array-contains">;
-    type _ = Assert<Extends<string | null, W>>;
-  });
-
-  test("string | null", () => {
-    type V = fuse.LegalValue<City, "state", "==">;
-    type _ = Assert<Extends<string | null, V>>;
-  });
+test(`Defined<{a?: string}, "a"> is {a: string}`, () => {
+  type T = Defined<{ a?: string }, "a">;
+  type _ = Assert<Exact<{ a: string }, T>>;
 });

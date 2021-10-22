@@ -4,15 +4,17 @@ import { ConstrainedData as CD } from "./index.js";
 import {
   Assert,
   City,
-  collection,
   DB,
   Exact,
   Match,
+  MySchema,
   Never,
-} from "./index.test";
-
+} from "./index.test.js";
+import { collection as C } from "./collection.js";
+import { query } from "./query.js";
 const where = fuse.where<City>();
 const orderBy = fuse.orderBy<City>();
+const collection = C<MySchema>();
 const cities = collection(DB, "cities");
 
 describe("ConstraintedData", () => {
@@ -82,7 +84,7 @@ describe("ConstraintedData", () => {
       type M = {
         type?: "A" | "B" | "C";
       };
-      
+
       const where = fuse.where<M>();
       const cs = [where("type", "!=", "A" as const)] as const;
       type T = CD<M, typeof cs>;
@@ -246,3 +248,77 @@ describe("ConstraintedData", () => {
     });
   });
 });
+
+test("use fuse.where with firestore.query", () => {
+  expect(() =>
+    fs.query(collection(DB, "user"), where("capital", "==", true))
+  ).not.toThrow();
+});
+
+test("use fuse.orderBy with firestore.query", () => {
+  expect(() =>
+    fs.query(collection(DB, "user"), orderBy("capital"))
+  ).not.toThrow();
+});
+
+describe(`query with where`, () => {
+  test(`query(where("country", "in", ["USA", "Japan"] as const)) narrows "country"`, async () => {
+    const c = where("country", "in", ["USA", "Japan"] as const);
+    const q = query(cities, c);
+    type D = typeof q extends fs.Query<infer T> ? T : never;
+    type _ = Assert<Match<{ country: "USA" | "Japan" }, D>>;
+    const querySS = await fs.getDocs(q);
+    querySS.forEach((ss) => {
+      expect(["USA", "Japan"]).toContain(ss.data().country);
+    });
+  });
+
+  test(`query(where("country", "not-in", ["USA", "Japan"])) returns Query<City>`, async () => {
+    const q = fs.query(cities, where("country", "not-in", ["USA", "Japan"]));
+    type _ = Assert<Exact<fs.Query<City>, typeof q>>;
+    const querySS = await fs.getDocs(q);
+    querySS.forEach((ss) => {
+      expect(["USA", "Japan"]).not.toContain(ss.data().country);
+    });
+  });
+
+  test(`query(where("regions", "array-contains-any", ["west_coast", "east_coast"] as const)) Defined<City, "regions">`, async () => {
+    const q = query(
+      cities,
+      where("regions", "array-contains-any", ["west_coast", "east_coast"])
+    );
+    type D = typeof q extends fs.Query<infer T> ? T : never;
+    type _ = Assert<Match<{ regions: string[] }, D>>;
+    const querySS = await fs.getDocs(q);
+    querySS.forEach((ss) => {
+      const regions = ss.data().regions;
+      expect(
+        regions?.includes("west_coast") || regions?.includes("east_coast")
+      ).toBeTruthy();
+    });
+  });
+});
+
+  describe("query with orderBy", () => {
+    test(`use query with orderBy("population") doesnt throw`, async () => {
+      const q = query(cities, orderBy("population"));
+      const querySS = await fs.getDocs(q);
+      let prev = 0;
+      querySS.forEach((ss) => {
+        const population = ss.data().population;
+        expect(population).toBeGreaterThanOrEqual(prev);
+        prev = population ?? prev;
+      });
+    });
+
+    test(`get cities orderBy("population", "desc")`, async () => {
+      const q = fs.query(cities, orderBy("population", "desc"));
+      const querySS = await fs.getDocs(q);
+      let prev = 100000000;
+      querySS.forEach((ss) => {
+        const population = ss.data().population;
+        expect(population).toBeLessThanOrEqual(prev);
+        prev = population ?? prev;
+      });
+    });
+  });
