@@ -1,6 +1,6 @@
 
 import * as admin from "firebase-admin";
-import { DocumentData, StrKeyof, ExcUndef, FieldType } from ".";
+import { DocumentData, StrKeyof, ExcUndef, FieldType } from "..";
 
 type WhereFilterOp = FirebaseFirestore.WhereFilterOp;
 
