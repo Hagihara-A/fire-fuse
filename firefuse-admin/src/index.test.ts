@@ -1,7 +1,7 @@
 process.env.FIRESTORE_EMULATOR_HOST = "localhost:8080";
 
 import * as admin from "firebase-admin";
-import * as fuse from ".";
+import * as fuse from "./index.js";
 
 const app = admin.initializeApp({ projectId: "abc" });
 export const DB = fuse.asFuse<MySchema>(admin.firestore(app));
@@ -166,19 +166,30 @@ describe("read data once", () => {
         a: (string | null)[];
       };
       type W = fuse.LegalValue<T, "a", "array-contains">;
-      type _ = Assert<Extends<T["a"][number], W>>;
+      type _ = Assert<Exact<string | null, W>>;
     });
     test("(string | null)[]| undefined array-contains string | null", () => {
       type T = {
         a?: (string | null)[];
       };
       type W = fuse.LegalValue<T, "a", "array-contains">;
-      type _ = Assert<Extends<string | null, W>>;
+      type _ = Assert<Exact<string | null, W>>;
     });
 
     test("string | null", () => {
       type V = fuse.LegalValue<City, "state", "==">;
-      type _ = Assert<Extends<string | null, V>>;
+      type _ = Assert<Exact<string | null, V>>;
     });
+  });
+});
+
+describe(`GetData`, () => {
+  test(`GetData<MySchema, ["cities"]> is City`, () => {
+    type D = fuse.GetData<MySchema, "cities">;
+    type _ = Assert<Exact<D, City>>;
+  });
+  test(`GetData<MySchema, ["cities", string]> is City`, () => {
+    type D = fuse.GetData<MySchema, `cities/${string}`>;
+    type _ = Assert<Exact<D, City>>;
   });
 });
