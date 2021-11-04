@@ -1,31 +1,31 @@
 import * as firestore from "firebase-admin/firestore";
-import { DocumentData, Join, StrKeyof } from "./index.js";
+import { DocumentData, ExcUndef, StrKeyof } from "./index.js";
 
 export type UpdateData<T extends DocumentData> = {
-  [P in UpdatePaths<T> as Join<P, ".">]: UpdateValue<T, P>;
+  [P in UpdatePaths<T>]?: UpdateValue<T, P>;
 };
 
 export type UpdatePaths<T extends DocumentData> = {
-  [K in StrKeyof<T>]: T[K] extends DocumentData
-    ? [K] | [K, ...UpdatePaths<T[K]>]
-    : [K];
+  [K in StrKeyof<T>]: ExcUndef<T[K]> extends DocumentData
+    ? `${K}` | `${K}.${UpdatePaths<ExcUndef<T[K]>>}`
+    : `${K}`;
 }[StrKeyof<T>];
 
 export type UpdateValue<
   T extends DocumentData,
   P extends UpdatePaths<T>
-> = P extends [infer Head, ...infer Rest]
-  ? Head extends keyof T
-    ? T[Head] extends infer U
-      ? Rest extends []
-        ? U
-        : U extends DocumentData
-        ? Rest extends UpdatePaths<U>
-          ? UpdateValue<U, Rest>
+> = P extends `${infer K}.${infer L}`
+  ? K extends keyof T
+    ? T[K] extends infer U
+      ? U extends DocumentData
+        ? L extends UpdatePaths<U>
+          ? UpdateValue<U, L>
           : never
         : never
       : never
     : never
+  : P extends keyof T
+  ? ExcUndef<T[P]>
   : never;
 
 export interface Update<T extends DocumentData> {
