@@ -1,7 +1,7 @@
 {
   "name": "firefuse",
   "scripts": {
-    "emu": "firebase emulators:start --export-on-exit --import=emudata  --project hoge",
+    "emu": "firebase emulators:start --project hoge",
     "prepare": "husky install",
     "test": "npm test --workspaces",
     "test-on-emu": "npx firebase emulators:exec 'npm test'"
