@@ -1,5 +1,5 @@
 import * as firestore from "firebase-admin/firestore";
-import { CollectionPaths } from "./collection.js";
+import { CollectionPaths, FuseCollectionReference } from "./collection.js";
 import { DocumentPaths } from "./doc.js";
 import { FuseDocumentReference } from "./reference.js";
 
@@ -68,7 +68,7 @@ export interface FuseFirestore<S extends SchemaBase>
 
   collection<P extends CollectionPaths<S>>(
     collectionPath: P
-  ): firestore.CollectionReference<GetData<S, P>>;
+  ): FuseCollectionReference<GetData<S, P>>;
 }
 
 export type Join<P extends string[], Sep extends string> = P extends [
