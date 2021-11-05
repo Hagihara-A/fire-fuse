@@ -8,7 +8,8 @@
   },
   "repository": "https://github.com/Hagihara-A/fire-fuse",
   "workspaces": [
-    "firefuse"
+    "firefuse",
+    "firefuse-admin"
   ],
   "devDependencies": {
     "@types/jest": "^27.0.1",
