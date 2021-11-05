@@ -1,6 +1,27 @@
+import { DocumentData, StrKeyof, ExcUndef, FieldType, Defined } from "..";
 
-import * as admin from "firebase-admin";
-import { DocumentData, StrKeyof, ExcUndef, FieldType } from "..";
+export type WhereData<
+  T extends DocumentData,
+  F extends StrKeyof<T>,
+  OP extends LegalOperation<T, F>,
+  V extends LegalValue<T, F, OP>
+> = OP extends GreaterOrLesserOp
+  ? Defined<T, F>
+  : OP extends "=="
+  ? T & { [K in F]-?: V }
+  : OP extends "!="
+  ? T & { [K in F]-?: Exclude<T[K], V | undefined> }
+  : OP extends "in"
+  ? V extends (infer E)[]
+    ? T & { [K in F]: E }
+    : never
+  : OP extends "not-in"
+  ? T & { [K in F]: Exclude<T[F], V | undefined> }
+  : OP extends "array-contains"
+  ? Defined<T, F>
+  : OP extends "array-contains-any"
+  ? Defined<T, F>
+  : never;
 
 type WhereFilterOp = FirebaseFirestore.WhereFilterOp;
 
@@ -9,19 +30,10 @@ export type ArrayOp = Extract<
   "array-contains" | "array-contains-any"
 >;
 
-export interface WhereConstraint<
-  T extends DocumentData,
-  F extends StrKeyof<T>,
-  OP extends LegalOperation<T, F>,
-  V extends Readonly<LegalValue<T, F, OP>>
-> extends admin.firestore.QueryConstraint {
-  readonly type: Extract<FirebaseFirestore.QueryConstraintType, "where">;
-  _field: F;
-  _op: OP;
-  _value: V;
-}
-
-type CommonOp = Extract<FirebaseFirestore.WhereFilterOp, "in" | "not-in" | "==" | "!=">;
+type CommonOp = Extract<
+  FirebaseFirestore.WhereFilterOp,
+  "in" | "not-in" | "==" | "!="
+>;
 
 export type GreaterOrLesserOp = Extract<
   FirebaseFirestore.WhereFilterOp,
