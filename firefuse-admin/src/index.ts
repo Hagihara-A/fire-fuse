@@ -1,4 +1,4 @@
-import * as firestore from "firebase-admin/firestore";
+import { Timestamp, Firestore } from "@google-cloud/firestore";
 import { CollectionPaths, FuseCollectionReference } from "./collection.js";
 import { DocumentPaths } from "./doc.js";
 import { FuseDocumentReference } from "./reference.js";
@@ -8,7 +8,7 @@ export type FieldType =
   | number
   | boolean
   | null
-  | firestore.Timestamp
+  | Timestamp
   | FieldType[]
   | DocumentData;
 
@@ -60,8 +60,7 @@ export type Memory<T extends DocumentData> = {
   prevOrderBy: boolean;
 };
 
-export interface FuseFirestore<S extends SchemaBase>
-  extends firestore.Firestore {
+export interface FuseFirestore<S extends SchemaBase> extends Firestore {
   doc<P extends DocumentPaths<S>>(
     documentPath: P
   ): FuseDocumentReference<GetData<S, P>>;

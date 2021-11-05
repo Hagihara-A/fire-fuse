@@ -1,4 +1,4 @@
-import * as firestore from "firebase-admin/firestore";
+import { Precondition, WriteResult, FieldPath } from "@google-cloud/firestore";
 import { DocumentData, ExcUndef, StrKeyof } from "./index.js";
 
 export type UpdateData<T extends DocumentData> = {
@@ -31,11 +31,11 @@ export type UpdateValue<
 export interface Update<T extends DocumentData> {
   (
     data: UpdateData<T>,
-    precondition?: firestore.Precondition | undefined
-  ): Promise<firestore.WriteResult>;
+    precondition?: Precondition | undefined
+  ): Promise<WriteResult>;
   (
-    field: string | firestore.FieldPath,
+    field: string | FieldPath,
     value: unknown,
     ...moreFieldsOrPrecondition: unknown[]
-  ): Promise<firestore.WriteResult>;
+  ): Promise<WriteResult>;
 }

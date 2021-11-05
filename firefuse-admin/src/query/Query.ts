@@ -1,8 +1,15 @@
+import { Query } from "@google-cloud/firestore";
 import { DocumentData, StrKeyof } from "../index.js";
-import * as admin from "firebase-admin";
 import { LegalOperation, LegalValue, WhereData } from "./where.js";
-export interface FuseQuery<T extends DocumentData>
-  extends admin.firestore.Query<T> {
+// import { OrderByDirection } from "@google-cloud/firestore";
+// import { Defined } from "../index.js";
+
+export interface FuseQuery<T extends DocumentData> extends Query<T> {
+  // orderBy<F extends StrKeyof<T>>(
+  //   fieldPath: F,
+  //   directionStr: OrderByDirection
+  // ): FuseQuery<Defined<T, F>>;
+
   where<
     F extends StrKeyof<T>,
     OP extends LegalOperation<T, F>,

@@ -1,4 +1,4 @@
-import { CollectionReference } from "firebase-admin/firestore";
+import { CollectionReference } from "@google-cloud/firestore";
 import { DocumentData, FuseQuery, SchemaBase, StrKeyof } from "./index.js";
 import { FuseDocumentReference } from "./reference.js";
 export type CollectionPaths<S extends SchemaBase> = StrKeyof<S> extends infer K

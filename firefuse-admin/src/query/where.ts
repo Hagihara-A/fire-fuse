@@ -1,4 +1,10 @@
-import { DocumentData, StrKeyof, ExcUndef, FieldType, Defined } from "..";
+import {
+  DocumentData,
+  StrKeyof,
+  ExcUndef,
+  FieldType,
+  Defined,
+} from "../index.js";
 
 export type WhereData<
   T extends DocumentData,
