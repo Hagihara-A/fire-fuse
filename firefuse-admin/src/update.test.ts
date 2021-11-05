@@ -28,9 +28,4 @@ describe("update", () => {
       >;
     });
   });
-
-  test("update top-level data", async () => {
-    const city = DB.doc("room/abc");
-    await city.update({ "rooms.living": 7 });
-  });
 });
