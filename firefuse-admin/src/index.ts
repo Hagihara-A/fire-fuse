@@ -71,9 +71,6 @@ export interface FuseFirestore<S extends SchemaBase>
   ): firestore.CollectionReference<GetData<S, P>>;
 }
 
-export const asFuse = <S extends SchemaBase>(DB: firestore.Firestore) =>
-  DB as FuseFirestore<S>;
-
 export type Join<P extends string[], Sep extends string> = P extends [
   infer Head,
   ...infer Rest

@@ -4,7 +4,7 @@ import * as admin from "firebase-admin";
 import * as fuse from "./index.js";
 
 const app = admin.initializeApp({ projectId: "abc" });
-export const DB = fuse.asFuse<MySchema>(admin.firestore(app));
+export const DB = admin.firestore(app) as fuse.FuseFirestore<MySchema>;
 
 export type User = {
   name: string;
