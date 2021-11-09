@@ -1,0 +1,28 @@
+{
+  "name": "sample-admin",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "./build/index.js",
+  "type": "module",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hagihara-A/fire-fuse.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Hagihara-A/fire-fuse/issues"
+  },
+  "homepage": "https://github.com/Hagihara-A/fire-fuse#readme",
+  "dependencies": {
+    "firebase-functions": "^3.16.0",
+    "firebase-admin": "^10.0.0",
+    "firefuse-admin": "latest"
+  }
+}
