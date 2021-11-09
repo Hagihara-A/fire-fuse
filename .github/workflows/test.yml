@@ -27,4 +27,3 @@ jobs:
       - run: npm i -g npm
       - run: npm ci
       - run: npm run test-on-emu
-      - run: npx -ws tsc --noEmit
