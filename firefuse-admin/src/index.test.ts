@@ -7,8 +7,12 @@ const app = admin.initializeApp({ projectId: "abc" });
 export const DB = admin.firestore(app) as fuse.FuseFirestore<MySchema>;
 
 export type User = {
-  name: string;
-  age: number;
+  name: { first: string; last: number; middle?: string };
+  age?: number;
+  sex?: "male" | "female" | "other";
+  birthDay: admin.firestore.Timestamp;
+  skills?: string[];
+  isStudent: boolean;
 };
 export type Payment = {
   cardNumber: number;
