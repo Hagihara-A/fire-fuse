@@ -3,8 +3,8 @@
   "scripts": {
     "emu": "firebase emulators:start --project hoge",
     "prepare": "husky install",
-    "test": "npm test --workspaces",
-    "test-on-emu": "npx firebase emulators:exec 'npm test -ws --if-present'"
+    "test": "npm test -ws --if-present",
+    "test-on-emu": "npx firebase emulators:exec 'npm test'"
   },
   "repository": "https://github.com/Hagihara-A/fire-fuse",
   "workspaces": [
