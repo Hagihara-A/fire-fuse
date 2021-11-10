@@ -18,11 +18,17 @@ export type WhereData<
   : OP extends "!="
   ? T & { [K in F]-?: Exclude<T[K], V | undefined> }
   : OP extends "in"
-  ? V extends (infer E)[]
+  ? V extends readonly (infer E)[]
     ? T & { [K in F]: E }
     : never
   : OP extends "not-in"
-  ? T & { [K in F]: Exclude<T[F], V | undefined> }
+  ? T &
+      {
+        [K in F]-?: Exclude<
+          T[K],
+          (V extends readonly (infer E)[] ? E : never) | undefined
+        >;
+      }
   : OP extends "array-contains"
   ? Defined<T, F>
   : OP extends "array-contains-any"
@@ -53,14 +59,14 @@ export type LegalValue<
   ? OP extends "!=" | "=="
     ? V
     : OP extends "in" | "not-in"
-    ? V[]
+    ? readonly V[]
     : OP extends GreaterOrLesserOp
     ? V extends UnPrimitive
       ? never
       : V
     : OP extends "array-contains-any"
     ? V extends (infer E)[]
-      ? E[]
+      ? readonly E[]
       : never
     : OP extends "array-contains"
     ? V extends (infer E)[]
