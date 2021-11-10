@@ -2,7 +2,7 @@ import * as fuse from "./index.js";
 import * as fs from "firebase/firestore";
 import { Assert, City, DB, Exact, MySchema } from "./index.test";
 import { collection } from "./collection.test.js";
-export const doc = fuse.doc<MySchema>();
+export const doc = fs.doc as fuse.Doc<MySchema>
 
 describe(`${doc.name}`, () => {
   test("doc(DB, 'cities', 'LA') is DocumentReference<City>", async () => {
