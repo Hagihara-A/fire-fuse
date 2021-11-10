@@ -14,6 +14,7 @@ export interface Doc<S extends SchemaBase> {
 }
 
 export const doc = <S extends SchemaBase>(): Doc<S> => {
+  // @ts-expect-error: Avoid infinite loop error. Deprecate in the future
   return <
     T extends DocumentData,
     P extends [string, string, ...string[]] & DocumentPaths<S>
