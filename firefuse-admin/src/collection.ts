@@ -9,7 +9,7 @@ export type CollectionPaths<S extends SchemaBase> = StrKeyof<S> extends infer K
     : never
   : never;
 
-type Base<T extends DocumentData> = FuseQuery<T> & CollectionReference<T>;
+type Base<T extends DocumentData> = FuseQuery<T> & Omit<CollectionReference<T>, "where">;
 export interface FuseCollectionReference<T extends DocumentData>
   extends Base<T> {
   doc(id?: string): FuseDocumentReference<T>;
