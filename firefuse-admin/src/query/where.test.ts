@@ -1,4 +1,4 @@
-import { Assert, City, DB, Match } from "../index.test.js";
+import { Assert, City, DB, Match, User } from "../index.test.js";
 import { WhereData } from "./where.js";
 
 describe(`where`, () => {
@@ -18,13 +18,25 @@ describe(`where`, () => {
   test(`WhereData<City, "population", "not-in", [1, 2]> matches { population: number }`, () => {
     type D = WhereData<City, "population", "not-in", [1, 2]>;
     type _ = Assert<Match<{ population: number }, D>>;
-  });  
+  });
   test(`WhereData<City, "regions", "array-contains", "Asia"> matches { regions: string[] }`, () => {
     type D = WhereData<City, "regions", "array-contains", "Asia">;
     type _ = Assert<Match<{ regions: string[] }, D>>;
   });
-    test(`WhereData<City, "regions", "array-contains-any", ["Asia"]> matches { regions: string[] }`, () => {
-      type D = WhereData<City, "regions", "array-contains-any", ["Asia"]>;
-      type _ = Assert<Match<{ regions: string[] }, D>>;
-    });
+  test(`WhereData<City, "regions", "array-contains-any", ["Asia"]> matches { regions: string[] }`, () => {
+    type D = WhereData<City, "regions", "array-contains-any", ["Asia"]>;
+    type _ = Assert<Match<{ regions: string[] }, D>>;
+  });
+  test(`WhereData<User, "sex", "in", ["male", "female"]> matches { sex: "male" | "female" }`, () => {
+    type D = WhereData<User, "sex", "in", ["male", "female"]>;
+    type _ = Assert<Match<{ sex: "male" | "female" }, D>>;
+  });
+  test(`WhereData<User, "sex", "in", readonly ["male", "female"]> matches { sex: "male" | "female" }`, () => {
+    type D = WhereData<User, "sex", "in", readonly ["male", "female"]>;
+    type _ = Assert<Match<{ sex: "male" | "female" }, D>>;
+  });
+  test(`WhereData<User, "sex", "in", ["male", "female"]> matches { sex: "male" | "female" }`, () => {
+    type D = WhereData<User, "sex", "not-in", readonly ["male", "female"]>;
+    type _ = Assert<Match<{ sex: "other" }, D>>;
+  });
 });
