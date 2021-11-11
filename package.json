@@ -1,12 +1,10 @@
 {
-  "name": "firefuse",
   "scripts": {
     "emu": "firebase emulators:start --project hoge",
     "prepare": "husky install",
     "test": "npm test -ws --if-present",
     "test-on-emu": "npx firebase emulators:exec 'npm test'",
-    "release": "npx semantic-release -e semantic-release-monorepo",
-    "semantic-release": "semantic-release"
+    "release": "npx semantic-release"
   },
   "repository": "https://github.com/Hagihara-A/fire-fuse",
   "workspaces": [
@@ -23,7 +21,7 @@
     "@typescript-eslint/parser": "^4.29.3",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
-    "firebase-tools": "^9.16.6",
+    "firebase-tools": "^9.6.1",
     "husky": "^7.0.2",
     "jest": "^27.1.0",
     "lint-staged": "^11.1.2",
@@ -37,9 +35,5 @@
     "*.{md,json,yml}": [
       "prettier --write"
     ]
-  },
-  "dependencies": {
-    "firebase": "^9.0.1"
-  },
-  "version": "0.0.0-development"
+  }
 }
