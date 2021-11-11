@@ -1,8 +1,15 @@
 import * as firestore from "firebase/firestore";
 import { SchemaBase, GetData } from "./index.js";
 
+export interface Collection<S extends SchemaBase> {
+  <P extends CollectionPaths<S>>(
+    DB: firestore.Firestore,
+    ...paths: P
+  ): firestore.CollectionReference<GetData<S, P>>;
+}
+
 export const collection =
-  <S extends SchemaBase>() =>
+  <S extends SchemaBase>(): Collection<S> =>
   <P extends CollectionPaths<S>>(DB: firestore.Firestore, ...paths: P) =>
     firestore.collection(DB, paths.join("/")) as firestore.CollectionReference<
       GetData<S, P>
