@@ -23,28 +23,21 @@ export type Room = {
   };
 };
 
-export type C1 = {
-  c1: "c1";
-};
-
-export type C2 = {
-  c2: "c2";
-};
-
-export type C3 = {
-  c3: "c3";
-  c31: { c32: { c33: string; c33_2: number } };
-};
-
 export type MySchema = {
-  user: fuse.Collection<User, { payment: fuse.Collection<Payment> }>;
-  room: fuse.Collection<Room>;
-  C1: fuse.Collection<
-    C1,
-    { C2: fuse.Collection<C2, { C3: fuse.Collection<C3> }> }
-  >;
-  cities: fuse.Collection<City>;
+  user: {
+    doc: User;
+    subcollection: {
+      payment: { doc: Payment };
+    };
+  };
+  room: {
+    doc: Room;
+  };
+  cities: {
+    doc: City;
+  };
 };
+
 export type City = {
   name: string;
   state: string | null;
