@@ -9,7 +9,8 @@
     "build": "tsc",
     "test-w": "jest --watch",
     "lint": "eslint src",
-    "prepublishOnly": "npm run build && npm pack"
+    "prepublishOnly": "npm run build && npm pack",
+    "release": "npx semantic-release"
   },
   "author": "arark",
   "devDependencies": {
