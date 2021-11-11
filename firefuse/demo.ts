@@ -37,8 +37,8 @@ type PaymentLog = {
 };
 
 const DB = firestore.getFirestore();
-const collection = fuse.collection<Schema>();
-const doc = fuse.doc<Schema>();
+const collection = firestore.collection as fuse.Collection<Schema>;
+const doc = firestore.doc as fuse.Doc<Schema>;
 
 collection(DB, "user"); // ✅
 collection(DB, "users"); // ❌: Type '"users"' is not assignable to type '"user"'
@@ -55,8 +55,9 @@ doc(userCollection, "uid"); // ✅
 
 const userCol = collection(DB, "user");
 const { query } = fuse;
-const where = fuse.where<User>();
-const orderBy = fuse.orderBy<User>();
+const where = firestore.where as fuse.Where<User>;
+const orderBy = firestore.orderBy as fuse.OrderBy<User>;
+
 where("age", "==", 22); // ✅
 where("age", "==", "22"); // ❌: Argument of type 'string' is not assignable to parameter of type 'number'.
 where("skills", "array-contains", "c"); // ✅
