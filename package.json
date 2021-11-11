@@ -1,14 +1,17 @@
 {
   "name": "firefuse",
   "scripts": {
-    "emu": "firebase emulators:start --export-on-exit --import=emudata  --project hoge",
+    "emu": "firebase emulators:start --project hoge",
     "prepare": "husky install",
-    "test": "npm test --workspaces",
+    "test": "npm test -ws --if-present",
     "test-on-emu": "npx firebase emulators:exec 'npm test'"
   },
   "repository": "https://github.com/Hagihara-A/fire-fuse",
   "workspaces": [
-    "firefuse"
+    "firefuse",
+    "firefuse-admin",
+    "sample-web",
+    "sample-admin"
   ],
   "devDependencies": {
     "@types/jest": "^27.0.1",
