@@ -23,15 +23,15 @@ export interface SchemaBase {
     subcollection?: SchemaBase;
   };
 }
-export type Collection<
-  T extends DocumentData,
-  SC extends SchemaBase | undefined = undefined
-> = SC extends undefined
-  ? { doc: T }
-  : {
-      doc: T;
-      subcollection: SC;
-    };
+// export type Collection<
+//   T extends DocumentData,
+//   SC extends SchemaBase | undefined = undefined
+// > = SC extends undefined
+//   ? { doc: T }
+//   : {
+//       doc: T;
+//       subcollection: SC;
+//     };
 
 export type GetData<
   S extends SchemaBase,

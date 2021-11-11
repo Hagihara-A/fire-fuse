@@ -10,11 +10,11 @@ import {
   MySchema,
   Never,
 } from "./index.test.js";
-import { collection as C } from "./collection.js";
 import { query } from "./query.js";
-const where = fuse.where<City>();
-const orderBy = fuse.orderBy<City>();
-const collection = C<MySchema>();
+
+const where = fs.where as fuse.Where<City>;
+const orderBy = fs.orderBy as fuse.OrderBy<City>;
+const collection = fs.collection as fuse.Collection<MySchema>;
 const cities = collection(DB, "cities");
 
 describe("ConstraintedData", () => {
@@ -299,26 +299,26 @@ describe(`query with where`, () => {
   });
 });
 
-  describe("query with orderBy", () => {
-    test(`use query with orderBy("population") doesnt throw`, async () => {
-      const q = query(cities, orderBy("population"));
-      const querySS = await fs.getDocs(q);
-      let prev = 0;
-      querySS.forEach((ss) => {
-        const population = ss.data().population;
-        expect(population).toBeGreaterThanOrEqual(prev);
-        prev = population ?? prev;
-      });
-    });
-
-    test(`get cities orderBy("population", "desc")`, async () => {
-      const q = fs.query(cities, orderBy("population", "desc"));
-      const querySS = await fs.getDocs(q);
-      let prev = 100000000;
-      querySS.forEach((ss) => {
-        const population = ss.data().population;
-        expect(population).toBeLessThanOrEqual(prev);
-        prev = population ?? prev;
-      });
+describe("query with orderBy", () => {
+  test(`use query with orderBy("population") doesnt throw`, async () => {
+    const q = query(cities, orderBy("population"));
+    const querySS = await fs.getDocs(q);
+    let prev = 0;
+    querySS.forEach((ss) => {
+      const population = ss.data().population;
+      expect(population).toBeGreaterThanOrEqual(prev);
+      prev = population ?? prev;
     });
   });
+
+  test(`get cities orderBy("population", "desc")`, async () => {
+    const q = fs.query(cities, orderBy("population", "desc"));
+    const querySS = await fs.getDocs(q);
+    let prev = 100000000;
+    querySS.forEach((ss) => {
+      const population = ss.data().population;
+      expect(population).toBeLessThanOrEqual(prev);
+      prev = population ?? prev;
+    });
+  });
+});

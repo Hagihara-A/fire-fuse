@@ -1,7 +1,19 @@
 import * as firestore from "firebase/firestore";
 import { DocumentData, StrKeyof, FieldType, ExcUndef } from "../index.js";
 
-export const where = <T extends DocumentData>() => {
+export interface Where<T extends DocumentData> {
+  <
+    F extends StrKeyof<T>,
+    OP extends LegalOperation<T, F>,
+    V extends Readonly<LegalValue<T, F, OP>>
+  >(
+    field: F,
+    op: OP,
+    value: V
+  ): WhereConstraint<T, F, OP, V>;
+}
+
+export const where = <T extends DocumentData>(): Where<T> => {
   return <
     F extends StrKeyof<T>,
     OP extends LegalOperation<T, F>,
