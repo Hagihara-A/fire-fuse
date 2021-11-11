@@ -90,7 +90,7 @@ That's all!
 
 ### Get reference
 
-You can't pass unexist path.
+You can't pass an unexist path.
 
 ```ts
 DB.collection(`user`); // ✅
@@ -102,11 +102,11 @@ DB.doc("user/uid/nowhere/id") // this returns DocumentReference<never>
   .then((ss) => ss.data().age); // ❌:'age' does not exist on type 'never'.
 ```
 
-For nested path, firefuse-admin returns `DocumentReference<never>` instead of throwing error in path. This is because Typescript can't represent any `string` other than `"X"` .
+For nested paths, firefuse-admin returns `DocumentReference<never>` instead of throwing an error at paths. This is because Typescript can't represent any `string` other than `"X"` .
 
 ### Construct query
 
-`where` is type-safe. For example you CANNOT specify `array-contains-any` in not-array field, CANNOT specify `<, <=, >=, >` in not-primitive field.
+`where` is also type-safe. For example you CANNOT specify `array-contains-any` in not-array field and CANNOT specify `<, <=, >=, >` in not-primitive field.
 
 Currently, `firefuse-admin` doesn't detect illegal query unlike `firefuse`.
 
