@@ -23,7 +23,7 @@ export type Room = {
   city: fs.DocumentReference<City>;
 };
 export type TsTestData = {
-  ts: fs.Timestamp;
+  ts?: fs.Timestamp;
 };
 
 export type MySchema = {
