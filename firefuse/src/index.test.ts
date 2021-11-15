@@ -1,5 +1,4 @@
 import * as fs from "firebase/firestore";
-import * as fuse from "./index.js";
 import { initializeApp } from "firebase/app";
 import { Defined } from "./index.js";
 
@@ -21,6 +20,10 @@ export type Room = {
     dining: number;
     kitchen: number;
   };
+  city: fs.DocumentReference<City>;
+};
+export type TsTestData = {
+  ts: fs.Timestamp;
 };
 
 export type MySchema = {
@@ -35,6 +38,9 @@ export type MySchema = {
   };
   cities: {
     doc: City;
+  };
+  ts: {
+    doc: TsTestData;
   };
 };
 
