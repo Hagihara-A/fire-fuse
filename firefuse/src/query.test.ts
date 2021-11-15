@@ -1,4 +1,6 @@
 import * as fs from "firebase/firestore";
+import { Collection } from "./collection.js";
+import { Doc } from "./doc.js";
 import * as fuse from "./index.js";
 import { ConstrainedData as CD } from "./index.js";
 import {
@@ -9,13 +11,13 @@ import {
   Match,
   MySchema,
   Never,
+  TsTestData,
 } from "./index.test.js";
 import { query } from "./query.js";
 
 const where = fs.where as fuse.Where<City>;
 const orderBy = fs.orderBy as fuse.OrderBy<City>;
 const collection = fs.collection as fuse.Collection<MySchema>;
-const cities = collection(DB, "cities");
 
 describe("ConstraintedData", () => {
   const cities = collection(DB, "cities");
@@ -262,6 +264,7 @@ test("use fuse.orderBy with firestore.query", () => {
 });
 
 describe(`query with where`, () => {
+  const cities = collection(DB, "cities");
   test(`query(where("country", "in", ["USA", "Japan"] as const)) narrows "country"`, async () => {
     const c = where("country", "in", ["USA", "Japan"] as const);
     const q = query(cities, c);
@@ -300,6 +303,7 @@ describe(`query with where`, () => {
 });
 
 describe("query with orderBy", () => {
+  const cities = collection(DB, "cities");
   test(`use query with orderBy("population") doesnt throw`, async () => {
     const q = query(cities, orderBy("population"));
     const querySS = await fs.getDocs(q);
@@ -320,5 +324,44 @@ describe("query with orderBy", () => {
       expect(population).toBeLessThanOrEqual(prev);
       prev = population ?? prev;
     });
+  });
+});
+
+describe(`can get docs which have Timestamp value`, () => {
+  const where = fs.where as fuse.Where<TsTestData>;
+  const doc = fs.doc as Doc<MySchema>;
+  test(`can get docs where("timestamp", "==", Timestamp)`, async () => {
+    const ts = fs.Timestamp.now();
+    const ref = doc(DB, "ts", "a");
+    await fs.setDoc(ref, { ts });
+    const q = query(ref.parent, where("ts", "==", ts));
+    const querySS = await fs.getDocs(q);
+    const gotDoc = querySS.docs.find((doc) => doc.data().ts.isEqual(ts));
+    expect(gotDoc?.ref?.path).toBe(ref.path);
+  });
+  test(`can get docs where("timestamp", "!=", Timestamp)`, async () => {
+    const ts = fs.Timestamp.now();
+    const ref = doc(DB, "ts", "a");
+    await fs.setDoc(ref, { ts });
+    const q = fs.query(ref.parent, where("ts", "!=", ts));
+    const querySS = await fs.getDocs(q);
+    expect(querySS.docs.every((doc) => doc.ref.path !== ref.path)).toBeTruthy();
+  });
+  test(`can get docs where("timestamp", ">=", Timestamp)`, async () => {
+    const ref1 = doc(DB, "ts", "a");
+    const before = fs.Timestamp.now();
+    const ref2 = doc(DB, "ts", "b");
+    const after = fs.Timestamp.fromMillis(before.toMillis() + 1000);
+    await fs.setDoc(ref1, { ts: before });
+    await fs.setDoc(ref2, { ts: after });
+
+    const q = query(ref1.parent, where("ts", ">", before));
+    const querySS = await fs.getDocs(q);
+    expect(
+      querySS.docs.filter(
+        (doc) => doc.ref.path === ref1.path || doc.ref.path === ref2.path
+      )
+    ).toHaveLength(1);
+    expect(querySS.docs[0].data().ts.isEqual(after)).toBeTruthy();
   });
 });
