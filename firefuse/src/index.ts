@@ -9,7 +9,8 @@ export type FieldType =
   | null
   | firestore.Timestamp
   | FieldType[]
-  | DocumentData;
+  | DocumentData
+  | firestore.DocumentReference<DocumentData>;
 
 export interface DocumentData {
   readonly [K: string]: FieldType;
