@@ -1,6 +1,8 @@
 import * as fs from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { Defined } from "./index.js";
+import { Doc } from "./doc.js";
+import { Collection } from "./collection.js";
 
 const app = initializeApp({ projectId: "pid" });
 export const DB = fs.getFirestore(app);
@@ -64,6 +66,9 @@ export type Match<E, A extends E> = Exact<E, Pick<A, keyof E>>;
 export type Never<T> = T extends never ? true : false;
 
 export type Assert<T extends true> = T;
+
+export const doc = fs.doc as Doc<MySchema>;
+export const collection = fs.collection as Collection<MySchema>;
 
 afterAll(async () => {
   await fs.terminate(DB);
