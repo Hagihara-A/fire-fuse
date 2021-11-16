@@ -61,8 +61,8 @@ export type ConstrainedData<
             ? ConstrainedData<
                 T &
                   {
-                    [L in F]-?: T[L] extends V
-                      ? T[L]
+                    [L in F]-?: ExcUndef<T[L]> extends V
+                      ? ExcUndef<T[L]>
                       : Exclude<T[L], V | undefined>;
                   },
                 Rest,

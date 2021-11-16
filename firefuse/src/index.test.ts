@@ -1,7 +1,8 @@
 import * as fs from "firebase/firestore";
-import * as fuse from "./index.js";
 import { initializeApp } from "firebase/app";
 import { Defined } from "./index.js";
+import { Doc } from "./doc.js";
+import { Collection } from "./collection.js";
 
 const app = initializeApp({ projectId: "pid" });
 export const DB = fs.getFirestore(app);
@@ -21,6 +22,10 @@ export type Room = {
     dining: number;
     kitchen: number;
   };
+  city: fs.DocumentReference<City>;
+};
+export type TsTestData = {
+  ts?: fs.Timestamp;
 };
 
 export type MySchema = {
@@ -35,6 +40,9 @@ export type MySchema = {
   };
   cities: {
     doc: City;
+  };
+  ts: {
+    doc: TsTestData;
   };
 };
 
@@ -58,6 +66,9 @@ export type Match<E, A extends E> = Exact<E, Pick<A, keyof E>>;
 export type Never<T> = T extends never ? true : false;
 
 export type Assert<T extends true> = T;
+
+export const doc = fs.doc as Doc<MySchema>;
+export const collection = fs.collection as Collection<MySchema>;
 
 afterAll(async () => {
   await fs.terminate(DB);

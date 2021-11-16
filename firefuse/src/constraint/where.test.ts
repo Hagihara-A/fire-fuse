@@ -1,17 +1,39 @@
 import * as fs from "firebase/firestore";
-import { LegalValue } from "..";
-import { Assert, City, DB, Exact, Extends } from "../index.test";
-import { LegalOperation, where as W } from "./where.js";
-const where = W<City>();
+import { Assert, City, Exact, Room, TsTestData } from "../index.test.js";
+import {
+  LegalOperation,
+  ArrayOp,
+  EqualOp,
+  GreaterOrLesserOp,
+  LegalValue,
+  Where,
+} from "./where.js";
+
+type RefTestData = {
+  readonly ref: fs.DocumentReference<Room>;
+  readonly refs: (fs.DocumentReference<Room> | null)[];
+};
 
 describe(`LegalOperation`, () => {
-  test(`"array-contains" extends LegalOperation<City, "regions">`, () => {
+  test(`LegalOperation<City, "regions"> is ArrayOp | EqualOp`, () => {
     type T = LegalOperation<City, "regions">;
-    type _ = Assert<Extends<"array-contains", T>>;
+    type _ = Assert<Exact<ArrayOp | EqualOp, T>>;
   });
-  test(`"array-contains-any" extends LegalOperation<City, "regions">`, () => {
+  test(`LegalOperation<City, "regions"> is ArrayOp | EqualOp`, () => {
     type T = LegalOperation<City, "regions">;
-    type _ = Assert<Extends<"array-contains-any", T>>;
+    type _ = Assert<Exact<ArrayOp | EqualOp, T>>;
+  });
+  test(`LegalOperation<RefTestData, "ref"> is EqualOp`, () => {
+    type OP = LegalOperation<RefTestData, "ref">;
+    type _ = Assert<Exact<EqualOp, OP>>;
+  });
+  test(`LegalOperation<RefTestData, "refs"> is EqualOp | ArrayOp`, () => {
+    type OP = LegalOperation<RefTestData, "refs">;
+    type _ = Assert<Exact<EqualOp | ArrayOp, OP>>;
+  });
+  test(`LegalOperation<{ a: fs.Timestamp }, "a"> is EqualOp | GreaterOrLesserOp`, () => {
+    type OP = LegalOperation<{ a: fs.Timestamp }, "a">;
+    type _ = Assert<Exact<EqualOp | GreaterOrLesserOp, OP>>;
   });
 });
 
@@ -34,16 +56,31 @@ describe(`LegaolValue`, () => {
     type V = LegalValue<T, "a", "array-contains">;
     type _ = Assert<Exact<string | null, V>>;
   });
-
   test("LegalValue<City, 'state', '=='> is string | null", () => {
     type V = LegalValue<City, "state", "==">;
     type _ = Assert<Exact<string | null, V>>;
   });
+  test("LegalValue<City, 'state', '=='> is string | null", () => {
+    type V = LegalValue<TsTestData, "ts", "==">;
+    type _ = Assert<Exact<fs.Timestamp, V>>;
+  });
+  test(`LegalValue<RefTestData, "ref", "=="> is DocRef<Room>`, () => {
+    type V = LegalValue<RefTestData, "ref", "==">;
+    type _ = Assert<Exact<fs.DocumentReference<Room>, V>>;
+  });
+  test(`LegalValue<RefTestData, "refs", "=="> is (DocRef | null)[]`, () => {
+    type V = LegalValue<RefTestData, "refs", "==">;
+    type _ = Assert<Exact<(fs.DocumentReference<Room> | null)[], V>>;
+  });
 });
+
 describe(`where`, () => {
+  const where = fs.where as Where<City>;
+
   test("able to create where(capital, ==, true)", () => {
     expect(() => where("capital", "==", true)).not.toThrow();
   });
+
   test(`able to create where("regions", "array-contains", "west_coast")`, () => {
     expect(() =>
       where("regions", "array-contains", "west_coast")

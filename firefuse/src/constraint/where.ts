@@ -42,12 +42,16 @@ export interface WhereConstraint<
   _value: V;
 }
 
-type CommonOp = Extract<firestore.WhereFilterOp, "in" | "not-in" | "==" | "!=">;
+export type EqualOp = Extract<
+  firestore.WhereFilterOp,
+  "in" | "not-in" | "==" | "!="
+>;
 
 export type GreaterOrLesserOp = Extract<
   firestore.WhereFilterOp,
   "<" | "<=" | ">" | ">="
 >;
+
 export type LegalValue<
   T extends DocumentData,
   F extends StrKeyof<T>,
@@ -58,7 +62,7 @@ export type LegalValue<
     : OP extends "in" | "not-in"
     ? V[]
     : OP extends GreaterOrLesserOp
-    ? V extends UnPrimitive
+    ? V extends UnOrderable
       ? never
       : V
     : OP extends "array-contains-any"
@@ -73,10 +77,20 @@ export type LegalValue<
   : never;
 
 export type LegalOperation<T extends DocumentData, F extends StrKeyof<T>> =
-  | (ExcUndef<T[F]> extends DocumentData
-      ? never
-      : ExcUndef<T[F]> extends FieldType[]
-      ? ArrayOp
-      : GreaterOrLesserOp)
-  | CommonOp;
-type UnPrimitive = DocumentData | FieldType[];
+  | (ExcUndef<T[F]> extends infer D
+      ? D extends FieldType[]
+        ? ArrayOp
+        : D extends UnOrderable
+        ? never
+        : D extends Orderable
+        ? GreaterOrLesserOp
+        : never
+      : never)
+  | EqualOp;
+
+export type Orderable = Exclude<FieldType, UnOrderable>;
+
+export type UnOrderable =
+  | DocumentData
+  | FieldType[]
+  | firestore.DocumentReference<DocumentData>;
