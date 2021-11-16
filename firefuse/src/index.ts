@@ -49,12 +49,6 @@ export type GetData<
     : never
   : never;
 
-export type KeyofPrimitive<
-  T extends DocumentData,
-  K extends keyof T = keyof T
-> = {
-  [L in K]: T[L] extends FieldType[] | DocumentData ? never : L;
-}[K];
 
 export type ExcUndef<T> = Exclude<T, undefined>;
 
