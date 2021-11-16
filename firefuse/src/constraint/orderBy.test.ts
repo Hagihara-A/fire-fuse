@@ -1,7 +1,9 @@
+import * as fs from "firebase/firestore";
 import { City } from "../index.test.js";
-import { orderBy as O } from "./orderby.js";
-const orderBy = O<City>();
-describe("orderBy", () => {
+import { OrderBy } from "./orderby.js";
+
+const orderBy = fs.orderBy as OrderBy<City>;
+describe("OrderBy<City>", () => {
   test(`able to create orderBy("population")`, () => {
     expect(() => orderBy("population")).not.toThrow();
   });
