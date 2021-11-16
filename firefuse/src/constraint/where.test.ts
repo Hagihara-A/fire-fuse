@@ -1,5 +1,5 @@
 import * as fs from "firebase/firestore";
-import { Assert, City, Exact, Room } from "../index.test.js";
+import { Assert, City, Exact, Room, TsTestData } from "../index.test.js";
 import {
   LegalOperation,
   ArrayOp,
@@ -56,10 +56,21 @@ describe(`LegaolValue`, () => {
     type V = LegalValue<T, "a", "array-contains">;
     type _ = Assert<Exact<string | null, V>>;
   });
-
   test("LegalValue<City, 'state', '=='> is string | null", () => {
     type V = LegalValue<City, "state", "==">;
     type _ = Assert<Exact<string | null, V>>;
+  });
+  test("LegalValue<City, 'state', '=='> is string | null", () => {
+    type V = LegalValue<TsTestData, "ts", "==">;
+    type _ = Assert<Exact<fs.Timestamp, V>>;
+  });
+  test(`LegalValue<RefTestData, "ref", "=="> is DocRef<Room>`, () => {
+    type V = LegalValue<RefTestData, "ref", "==">;
+    type _ = Assert<Exact<fs.DocumentReference<Room>, V>>;
+  });
+  test(`LegalValue<RefTestData, "refs", "=="> is (DocRef | null)[]`, () => {
+    type V = LegalValue<RefTestData, "refs", "==">;
+    type _ = Assert<Exact<(fs.DocumentReference<Room> | null)[], V>>;
   });
 });
 
