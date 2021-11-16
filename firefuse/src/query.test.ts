@@ -1,14 +1,14 @@
 import * as fs from "firebase/firestore";
-import { Doc } from "./doc.js";
 import * as fuse from "./index.js";
 import { ConstrainedData as CD } from "./index.js";
 import {
   Assert,
   City,
+  collection,
   DB,
+  doc,
   Exact,
   Match,
-  MySchema,
   Never,
   TsTestData,
 } from "./index.test.js";
@@ -16,7 +16,6 @@ import { query } from "./query.js";
 
 const where = fs.where as fuse.Where<City>;
 const orderBy = fs.orderBy as fuse.OrderBy<City>;
-const collection = fs.collection as fuse.Collection<MySchema>;
 
 describe("ConstraintedData", () => {
   const cities = collection(DB, "cities");
@@ -327,12 +326,11 @@ describe("query with orderBy", () => {
 });
 
 describe(`can get docs which have Timestamp value`, () => {
-  const where = fs.where as fuse.Where<TsTestData>;
-  const doc = fs.doc as Doc<MySchema>;
   const now = fs.Timestamp.now();
   const tss: { ts: fs.Timestamp; ref: fs.DocumentReference<TsTestData> }[] = [];
   const n = 10;
   const tsCol = collection(DB, "ts");
+  const where = fs.where as fuse.Where<TsTestData>;
   const orderBy = fs.orderBy as fuse.OrderBy<TsTestData>;
 
   beforeAll(async () => {
@@ -346,19 +344,25 @@ describe(`can get docs which have Timestamp value`, () => {
 
   test(`can get docs where("timestamp", "==", Timestamp)`, async () => {
     const { ts, ref } = tss[5];
-    const q = query(ref.parent, where("ts", "==", ts));
+    const q = query(tsCol, where("ts", "==", ts));
     const querySS = await fs.getDocs(q);
 
     expect(querySS.docs).toHaveLength(1);
-    const gotDocs = querySS.docs.find((doc) => doc.data().ts.isEqual(ts));
-    expect(gotDocs?.ref?.path).toBe(ref.path);
+    const gotDoc = querySS.docs.find((doc) => doc.data().ts.isEqual(ts));
+    expect(gotDoc?.ref).toBeInstanceOf(fs.DocumentReference);
+    expect(gotDoc?.ref?.path).toBe(ref.path);
   });
   test(`can get docs where("timestamp", "!=", Timestamp)`, async () => {
     const { ts, ref } = tss[5];
 
-    const q = fs.query(ref.parent, where("ts", "!=", ts));
+    const q = query(tsCol, where("ts", "!=", ts));
     const querySS = await fs.getDocs(q);
-    expect(querySS.docs.every((doc) => doc.ref.path !== ref.path)).toBeTruthy();
+    expect(querySS.docs).toHaveLength(n - 1);
+    expect(
+      querySS.docs.every(
+        (doc) => doc.ref.path !== ref.path && !doc.data().ts.isEqual(ts)
+      )
+    ).toBeTruthy();
   });
   test(`can get docs where("timestamp", ">=", Timestamp)`, async () => {
     const m = 3;
@@ -376,7 +380,7 @@ describe(`can get docs which have Timestamp value`, () => {
     const q = query(tsCol, orderBy("ts"));
     const { docs } = await fs.getDocs(q);
     let prev = 0;
-    expect.assertions(n+1)
+    expect.assertions(n + 1);
     expect(docs).toHaveLength(n);
     for (const d of docs) {
       const ts = d.data().ts;
