@@ -1,5 +1,4 @@
 import * as fs from "firebase/firestore";
-import { Collection } from "./collection.js";
 import { Doc } from "./doc.js";
 import * as fuse from "./index.js";
 import { ConstrainedData as CD } from "./index.js";
@@ -330,38 +329,59 @@ describe("query with orderBy", () => {
 describe(`can get docs which have Timestamp value`, () => {
   const where = fs.where as fuse.Where<TsTestData>;
   const doc = fs.doc as Doc<MySchema>;
+  const now = fs.Timestamp.now();
+  const tss: { ts: fs.Timestamp; ref: fs.DocumentReference<TsTestData> }[] = [];
+  const n = 10;
+  const tsCol = collection(DB, "ts");
+  const orderBy = fs.orderBy as fuse.OrderBy<TsTestData>;
+
+  beforeAll(async () => {
+    for (let index = 0; index < n; index++) {
+      const ts = fs.Timestamp.fromMillis(now.toMillis() + 1000 * 60 * index);
+      const ref = doc(tsCol, `${index}`);
+      tss.push({ ts, ref });
+      await fs.setDoc(ref, { ts });
+    }
+  });
+
   test(`can get docs where("timestamp", "==", Timestamp)`, async () => {
-    const ts = fs.Timestamp.now();
-    const ref = doc(DB, "ts", "a");
-    await fs.setDoc(ref, { ts });
+    const { ts, ref } = tss[5];
     const q = query(ref.parent, where("ts", "==", ts));
     const querySS = await fs.getDocs(q);
-    const gotDoc = querySS.docs.find((doc) => doc.data().ts.isEqual(ts));
-    expect(gotDoc?.ref?.path).toBe(ref.path);
+
+    expect(querySS.docs).toHaveLength(1);
+    const gotDocs = querySS.docs.find((doc) => doc.data().ts.isEqual(ts));
+    expect(gotDocs?.ref?.path).toBe(ref.path);
   });
   test(`can get docs where("timestamp", "!=", Timestamp)`, async () => {
-    const ts = fs.Timestamp.now();
-    const ref = doc(DB, "ts", "a");
-    await fs.setDoc(ref, { ts });
+    const { ts, ref } = tss[5];
+
     const q = fs.query(ref.parent, where("ts", "!=", ts));
     const querySS = await fs.getDocs(q);
     expect(querySS.docs.every((doc) => doc.ref.path !== ref.path)).toBeTruthy();
   });
   test(`can get docs where("timestamp", ">=", Timestamp)`, async () => {
-    const ref1 = doc(DB, "ts", "a");
-    const before = fs.Timestamp.now();
-    const ref2 = doc(DB, "ts", "b");
-    const after = fs.Timestamp.fromMillis(before.toMillis() + 1000);
-    await fs.setDoc(ref1, { ts: before });
-    await fs.setDoc(ref2, { ts: after });
+    const m = 3;
+    const { ref: ref1, ts: before } = tss[m];
 
     const q = query(ref1.parent, where("ts", ">", before));
     const querySS = await fs.getDocs(q);
     expect(
-      querySS.docs.filter(
-        (doc) => doc.ref.path === ref1.path || doc.ref.path === ref2.path
-      )
-    ).toHaveLength(1);
-    expect(querySS.docs[0].data().ts.isEqual(after)).toBeTruthy();
+      querySS.docs.every((doc) => doc.data().ts.toMillis() > before.toMillis())
+    ).toBeTruthy();
+    expect(querySS.docs).toHaveLength(n - m - 1);
+  });
+
+  test(`Timestample is able to be ordered by orderBy`, async () => {
+    const q = query(tsCol, orderBy("ts"));
+    const { docs } = await fs.getDocs(q);
+    let prev = 0;
+    expect.assertions(n+1)
+    expect(docs).toHaveLength(n);
+    for (const d of docs) {
+      const ts = d.data().ts;
+      expect(prev < ts.toMillis()).toBeTruthy();
+      prev = ts.toMillis();
+    }
   });
 });
