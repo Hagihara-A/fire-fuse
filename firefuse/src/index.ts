@@ -1,6 +1,4 @@
 import * as firestore from "firebase/firestore";
-import { CollectionPaths } from "./collection.js";
-import { DocumentPaths } from "./doc.js";
 
 export type FieldType =
   | string
@@ -18,37 +16,14 @@ export interface DocumentData {
 
 export type StrKeyof<T> = keyof T & string;
 
-export interface SchemaBase {
-  readonly [K: string]: {
-    doc: DocumentData;
-    subcollection?: SchemaBase;
+export interface Schema {
+  [CollectionKey: string]: {
+    [DocuemntKey: string]: {
+      doc: DocumentData;
+      col?: Schema;
+    };
   };
 }
-// export type Collection<
-//   T extends DocumentData,
-//   SC extends SchemaBase | undefined = undefined
-// > = SC extends undefined
-//   ? { doc: T }
-//   : {
-//       doc: T;
-//       subcollection: SC;
-//     };
-
-export type GetData<
-  S extends SchemaBase,
-  P extends CollectionPaths<S> | DocumentPaths<S>
-> = P extends [infer C] | [infer C, string]
-  ? S[C & string]["doc"]
-  : P extends [infer C, string, ...infer Rest]
-  ? S[C & string]["subcollection"] extends SchemaBase
-    ? Rest extends
-        | CollectionPaths<S[C & string]["subcollection"]>
-        | DocumentPaths<S[C & string]["subcollection"]>
-      ? GetData<S[C & string]["subcollection"], Rest>
-      : never
-    : never
-  : never;
-
 
 export type ExcUndef<T> = Exclude<T, undefined>;
 
