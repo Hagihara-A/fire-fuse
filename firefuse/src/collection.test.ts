@@ -1,19 +1,5 @@
-import * as fs from "firebase/firestore";
 import { CollectionPaths } from "./collection.js";
-import {
-  Assert,
-  City,
-  collection,
-  DB,
-  Exact,
-  Extends,
-  MySchema,
-} from "./index.test.js";
-
-test(`collection(DB, "cities") returuns CollectionReference<City>`, () => {
-  const cities = collection(DB, "cities");
-  type _ = Assert<Exact<fs.CollectionReference<City>, typeof cities>>;
-});
+import { Assert, Extends, MySchema } from "./index.test.js";
 
 describe(`CollectionPaths`, () => {
   test(`["user"] extends CollectionPaths`, () => {
