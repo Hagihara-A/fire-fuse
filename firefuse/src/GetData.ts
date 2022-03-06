@@ -6,7 +6,7 @@ export type GetData<
   P extends CollectionPaths<S> | DocumentPaths<S>
 > = P extends [infer ColKey]
   ? ColKey extends StrKeyof<Schema>
-    ? S[ColKey][string]["doc"]
+    ? S[ColKey][StrKeyof<S[ColKey]>]["doc"]
     : never
   : P extends [infer ColKey, infer DocKey, ...infer Rest]
   ? ColKey extends StrKeyof<S>

@@ -7,6 +7,11 @@ describe(`GetData`, () => {
     type _ = Assert<Exact<D, MySchema["user"][string]["doc"]>>;
   });
 
+  test(`GetData<MySchema, ["cities"]> is exactlly Record<string, never>`, () => {
+    type D = GetData<MySchema, ["cities"]>;
+    type _ = Assert<Exact<D, MySchema["cities"]["v1" | "v2"]["doc"]>>;
+  });
+
   test(`GetData<MySchema, ["user", string]> is exactlly User | Count`, () => {
     type D = GetData<MySchema, ["user", string]>;
     type _ = Assert<Exact<D, MySchema["user"][string]["doc"]>>;
