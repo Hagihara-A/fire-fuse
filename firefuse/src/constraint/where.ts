@@ -13,18 +13,6 @@ export interface Where<T extends DocumentData> {
   ): WhereConstraint<T, F, OP, V>;
 }
 
-export const where = <T extends DocumentData>(): Where<T> => {
-  return <
-    F extends StrKeyof<T>,
-    OP extends LegalOperation<T, F>,
-    V extends Readonly<LegalValue<T, F, OP>>
-  >(
-    field: F,
-    op: OP,
-    value: V
-  ) => firestore.where(field, op, value) as WhereConstraint<T, F, OP, V>;
-};
-
 export type ArrayOp = Extract<
   firestore.WhereFilterOp,
   "array-contains" | "array-contains-any"
