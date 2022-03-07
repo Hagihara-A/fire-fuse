@@ -1,13 +1,13 @@
-import * as fs from "firebase/firestore";
+import * as fst from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { Defined, Schema } from "./index.js";
 import { Doc } from "./doc.js";
 import { Collection } from "./collection.js";
-import * as fst from "firebase/firestore";
+import { Query } from "./query.js";
 
 const app = initializeApp({ projectId: "pid" });
-export const DB = fs.getFirestore(app);
-fs.connectFirestoreEmulator(DB, "localhost", 8080);
+export const DB = fst.getFirestore(app);
+fst.connectFirestoreEmulator(DB, "localhost", 8080);
 
 export type MySchema = {
   user: {
@@ -54,7 +54,7 @@ export type Room = {
     dining: number;
     kitchen: number;
   };
-  city: fs.DocumentReference<City>;
+  city: fst.DocumentReference<City>;
 };
 
 export type Count = {
@@ -81,7 +81,7 @@ export type CityV2 = {
     createdAt: fst.Timestamp;
     updatedAt?: fst.Timestamp[];
   };
-  cityV1Ref?: fs.DocumentReference<City>;
+  cityV1Ref?: fst.DocumentReference<City>;
 };
 
 export type Extends<A, E> = [A] extends [E] ? true : false;
@@ -96,11 +96,12 @@ export type Never<T> = T extends never ? true : false;
 
 export type Assert<T extends true> = T;
 
-export const doc = fs.doc as unknown as Doc<MySchema>;
-export const collection = fs.collection as unknown as Collection<MySchema>;
+export const doc = fst.doc as unknown as Doc<MySchema>;
+export const collection = fst.collection as unknown as Collection<MySchema>;
+export const query = fst.query as Query<MySchema>;
 
 afterAll(async () => {
-  await fs.terminate(DB);
+  await fst.terminate(DB);
 });
 
 test(`Defined<{a?: string}, "a"> is {a: string}`, () => {

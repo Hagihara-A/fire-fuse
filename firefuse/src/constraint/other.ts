@@ -1,50 +1,50 @@
-import * as firestore from "firebase/firestore";
+import * as fst from "firebase/firestore";
 
-export interface OtherConstraints extends firestore.QueryConstraint {
-  readonly type: Exclude<firestore.QueryConstraintType, "where" | "orderBy">;
+export interface OtherConstraints extends fst.QueryConstraint {
+  readonly type: Exclude<fst.QueryConstraintType, "where" | "orderBy">;
 }
 
 export const limit = (limit: number) =>
-  firestore.limit(limit) as OtherConstraints;
+  fst.limit(limit) as OtherConstraints;
 export const limitToLast = (limit: number) =>
-  firestore.limitToLast(limit) as OtherConstraints;
+  fst.limitToLast(limit) as OtherConstraints;
 
 export function startAt(
-  snapshot: firestore.DocumentSnapshot<unknown>
+  snapshot: fst.DocumentSnapshot<unknown>
 ): OtherConstraints;
 export function startAt(...fieldValues: unknown[]): OtherConstraints;
 export function startAt(
-  ...fieldValues: [firestore.DocumentSnapshot<unknown>] | unknown[]
+  ...fieldValues: [fst.DocumentSnapshot<unknown>] | unknown[]
 ) {
-  return firestore.startAt(...fieldValues) as OtherConstraints;
+  return fst.startAt(...fieldValues) as OtherConstraints;
 }
 
 export function startAfter(
-  snapshot: firestore.DocumentSnapshot<unknown>
+  snapshot: fst.DocumentSnapshot<unknown>
 ): OtherConstraints;
 export function startAfter(...fieldValues: unknown[]): OtherConstraints;
 export function startAfter(
-  ...fieldValues: unknown[] | [firestore.DocumentSnapshot<unknown>]
+  ...fieldValues: unknown[] | [fst.DocumentSnapshot<unknown>]
 ) {
-  return firestore.startAfter(...fieldValues);
+  return fst.startAfter(...fieldValues);
 }
 
 export function endAt(
-  snapshot: firestore.DocumentSnapshot<unknown>
+  snapshot: fst.DocumentSnapshot<unknown>
 ): OtherConstraints;
 export function endAt(...fieldValues: unknown[]): OtherConstraints;
 export function endAt(
-  ...fieldValues: [firestore.DocumentSnapshot<unknown>] | unknown[]
+  ...fieldValues: [fst.DocumentSnapshot<unknown>] | unknown[]
 ) {
-  return firestore.endAt(...fieldValues) as OtherConstraints;
+  return fst.endAt(...fieldValues) as OtherConstraints;
 }
 
 export function endBefore(
-  snapshot: firestore.DocumentSnapshot<unknown>
+  snapshot: fst.DocumentSnapshot<unknown>
 ): OtherConstraints;
 export function endBefore(...fieldValues: unknown[]): OtherConstraints;
 export function endBefore(
-  ...fieldValues: [firestore.DocumentSnapshot<unknown>] | unknown[]
+  ...fieldValues: [fst.DocumentSnapshot<unknown>] | unknown[]
 ) {
-  return firestore.endBefore(...fieldValues) as OtherConstraints;
+  return fst.endBefore(...fieldValues) as OtherConstraints;
 }

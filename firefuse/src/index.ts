@@ -1,14 +1,14 @@
-import * as firestore from "firebase/firestore";
+import * as fst from "firebase/firestore";
 
 export type FieldType =
   | string
   | number
   | boolean
   | null
-  | firestore.Timestamp
+  | fst.Timestamp
   | FieldType[]
   | DocumentData
-  | firestore.DocumentReference<DocumentData>;
+  | fst.DocumentReference<DocumentData>;
 
 export interface DocumentData {
   readonly [K: string]: FieldType;

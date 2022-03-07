@@ -1,4 +1,4 @@
-import * as fs from "firebase/firestore";
+import * as fst from "firebase/firestore";
 import * as fuse from "./index.js";
 import { ConstrainedData as CD } from "./index.js";
 import {
@@ -10,12 +10,10 @@ import {
   Exact,
   Match,
   Never,
-  TsTestData,
 } from "./index.test.js";
-import { query } from "./query.js";
 
-const where = fs.where as fuse.Where<City>;
-const orderBy = fs.orderBy as fuse.OrderBy<City>;
+const where = fst.where as fuse.Where<City>;
+const orderBy = fst.orderBy as fuse.OrderBy<City>;
 
 describe("ConstraintedData", () => {
   const cities = collection(DB, "cities");
@@ -70,14 +68,14 @@ describe("ConstraintedData", () => {
       const cs = [where("name", "!=", "tokyo")] as const;
       type T = CD<City, typeof cs>;
       type _ = Assert<Match<{ name: string }, T>>;
-      expect(() => fs.getDocs(fs.query(cities, ...cs))).not.toThrow();
+      expect(() => fst.getDocs(fst.query(cities, ...cs))).not.toThrow();
     });
 
     test("name not-in string[] is not never", () => {
       const cs = [where("name", "not-in", ["tokyo"])] as const;
       type T = CD<City, typeof cs>;
       type _ = Assert<Match<{ name: string }, T>>;
-      expect(() => fs.getDocs(fs.query(cities, ...cs))).not.toThrow();
+      expect(() => fst.getDocs(fst.query(cities, ...cs))).not.toThrow();
     });
 
     test("!= excludes literal union", () => {
@@ -129,7 +127,7 @@ describe("ConstraintedData", () => {
       ] as const;
       type T = CD<City, typeof cs>;
       type _ = Assert<Match<{ population: 1000; capital: true }, T>>;
-      expect(() => fs.query(cities, ...cs)).not.toThrow();
+      expect(() => fst.query(cities, ...cs)).not.toThrow();
     });
 
     test("< & == is OK. field exists", () => {
@@ -139,7 +137,7 @@ describe("ConstraintedData", () => {
       ] as const;
       type T = CD<City, typeof cs>;
       type _ = Assert<Match<{ population: number; capital: boolean }, T>>;
-      expect(() => fs.getDocs(fs.query(cities, ...cs))).not.toThrow();
+      expect(() => fst.getDocs(fst.query(cities, ...cs))).not.toThrow();
     });
 
     test("population > 1000 & population < 2000 is OK", () => {
@@ -149,7 +147,7 @@ describe("ConstraintedData", () => {
       ] as const;
       type T = CD<City, typeof cs>;
       type _ = Assert<Match<{ population: number }, T>>;
-      expect(() => fs.getDocs(fs.query(cities, ...cs))).not.toThrow();
+      expect(() => fst.getDocs(fst.query(cities, ...cs))).not.toThrow();
     });
 
     test("population > 1000 & name < US is never", () => {
@@ -159,7 +157,7 @@ describe("ConstraintedData", () => {
       ] as const;
       type T = CD<City, typeof cs>;
       type _ = Assert<Never<T>>;
-      expect(() => fs.query(cities, ...cs)).toThrow();
+      expect(() => fst.query(cities, ...cs)).toThrow();
     });
 
     test("!= & not-in is never", () => {
@@ -169,7 +167,7 @@ describe("ConstraintedData", () => {
       ] as const;
       type T = CD<City, typeof cs>;
       type _ = Assert<Never<T>>;
-      expect(() => fs.query(cities, ...cs)).toThrow();
+      expect(() => fst.query(cities, ...cs)).toThrow();
     });
 
     test("arr-con & arr-con-any is never", () => {
@@ -179,7 +177,7 @@ describe("ConstraintedData", () => {
       ] as const;
       type T = CD<City, typeof cs>;
       type _ = Assert<Never<T>>;
-      expect(() => fs.query(cities, ...cs)).toThrow();
+      expect(() => fst.query(cities, ...cs)).toThrow();
     });
 
     test("not-in & in & >= & == && orderBy && ...otherConstraints is valid", () => {
@@ -213,7 +211,7 @@ describe("ConstraintedData", () => {
       const cs = [where("population", ">", 123), orderBy("name")] as const;
       type T = CD<City, typeof cs>;
       type _ = Assert<Never<T>>;
-      expect(() => fs.getDocs(fs.query(cities, ...cs))).toThrow();
+      expect(() => fst.getDocs(fst.query(cities, ...cs))).toThrow();
     });
 
     test(`where(name), orderBy(name), orderBy(population) is OK`, () => {
@@ -251,13 +249,13 @@ describe("ConstraintedData", () => {
 
 test("use fuse.where with firestore.query", () => {
   expect(() =>
-    fs.query(collection(DB, "user"), where("capital", "==", true))
+    fst.query(collection(DB, "user"), where("capital", "==", true))
   ).not.toThrow();
 });
 
 test("use fuse.orderBy with firestore.query", () => {
   expect(() =>
-    fs.query(collection(DB, "user"), orderBy("capital"))
+    fst.query(collection(DB, "user"), orderBy("capital"))
   ).not.toThrow();
 });
 
@@ -266,18 +264,18 @@ describe(`query with where`, () => {
   test(`query(where("country", "in", ["USA", "Japan"] as const)) narrows "country"`, async () => {
     const c = where("country", "in", ["USA", "Japan"] as const);
     const q = query(cities, c);
-    type D = typeof q extends fs.Query<infer T> ? T : never;
+    type D = typeof q extends fst.Query<infer T> ? T : never;
     type _ = Assert<Match<{ country: "USA" | "Japan" }, D>>;
-    const querySS = await fs.getDocs(q);
+    const querySS = await fst.getDocs(q);
     querySS.forEach((ss) => {
       expect(["USA", "Japan"]).toContain(ss.data().country);
     });
   });
 
   test(`query(where("country", "not-in", ["USA", "Japan"])) returns Query<City>`, async () => {
-    const q = fs.query(cities, where("country", "not-in", ["USA", "Japan"]));
-    type _ = Assert<Exact<fs.Query<City>, typeof q>>;
-    const querySS = await fs.getDocs(q);
+    const q = fst.query(cities, where("country", "not-in", ["USA", "Japan"]));
+    type _ = Assert<Exact<fst.Query<City>, typeof q>>;
+    const querySS = await fst.getDocs(q);
     querySS.forEach((ss) => {
       expect(["USA", "Japan"]).not.toContain(ss.data().country);
     });
@@ -288,9 +286,9 @@ describe(`query with where`, () => {
       cities,
       where("regions", "array-contains-any", ["west_coast", "east_coast"])
     );
-    type D = typeof q extends fs.Query<infer T> ? T : never;
+    type D = typeof q extends fst.Query<infer T> ? T : never;
     type _ = Assert<Match<{ regions: string[] }, D>>;
-    const querySS = await fs.getDocs(q);
+    const querySS = await fst.getDocs(q);
     querySS.forEach((ss) => {
       const regions = ss.data().regions;
       expect(
@@ -304,7 +302,7 @@ describe("query with orderBy", () => {
   const cities = collection(DB, "cities");
   test(`use query with orderBy("population") doesnt throw`, async () => {
     const q = query(cities, orderBy("population"));
-    const querySS = await fs.getDocs(q);
+    const querySS = await fst.getDocs(q);
     let prev = 0;
     querySS.forEach((ss) => {
       const population = ss.data().population;
@@ -314,8 +312,8 @@ describe("query with orderBy", () => {
   });
 
   test(`get cities orderBy("population", "desc")`, async () => {
-    const q = fs.query(cities, orderBy("population", "desc"));
-    const querySS = await fs.getDocs(q);
+    const q = fst.query(cities, orderBy("population", "desc"));
+    const querySS = await fst.getDocs(q);
     let prev = 100000000;
     querySS.forEach((ss) => {
       const population = ss.data().population;
@@ -326,37 +324,37 @@ describe("query with orderBy", () => {
 });
 
 describe(`can get docs which have Timestamp value`, () => {
-  const now = fs.Timestamp.now();
-  const tss: { ts: fs.Timestamp; ref: fs.DocumentReference<TsTestData> }[] = [];
+  const now = fst.Timestamp.now();
+  const tss: { ts: fst.Timestamp; ref: fst.DocumentReference<TsTestData> }[] = [];
   const n = 10;
   const tsCol = collection(DB, "ts");
-  const where = fs.where as fuse.Where<TsTestData>;
-  const orderBy = fs.orderBy as fuse.OrderBy<TsTestData>;
+  const where = fst.where as fuse.Where<TsTestData>;
+  const orderBy = fst.orderBy as fuse.OrderBy<TsTestData>;
 
   beforeAll(async () => {
     for (let index = 0; index < n; index++) {
-      const ts = fs.Timestamp.fromMillis(now.toMillis() + 1000 * 60 * index);
+      const ts = fst.Timestamp.fromMillis(now.toMillis() + 1000 * 60 * index);
       const ref = doc(tsCol, `${index}`);
       tss.push({ ts, ref });
-      await fs.setDoc(ref, { ts });
+      await fst.setDoc(ref, { ts });
     }
   });
 
   test(`can get docs where("timestamp", "==", Timestamp)`, async () => {
     const { ts, ref } = tss[5];
     const q = query(tsCol, where("ts", "==", ts));
-    const querySS = await fs.getDocs(q);
+    const querySS = await fst.getDocs(q);
 
     expect(querySS.docs).toHaveLength(1);
     const gotDoc = querySS.docs.find((doc) => doc.data().ts.isEqual(ts));
-    expect(gotDoc?.ref).toBeInstanceOf(fs.DocumentReference);
+    expect(gotDoc?.ref).toBeInstanceOf(fst.DocumentReference);
     expect(gotDoc?.ref?.path).toBe(ref.path);
   });
   test(`can get docs where("timestamp", "!=", Timestamp)`, async () => {
     const { ts, ref } = tss[5];
 
     const q = query(tsCol, where("ts", "!=", ts));
-    const querySS = await fs.getDocs(q);
+    const querySS = await fst.getDocs(q);
     expect(querySS.docs).toHaveLength(n - 1);
     expect(
       querySS.docs.every(
@@ -369,7 +367,7 @@ describe(`can get docs which have Timestamp value`, () => {
     const { ref: ref1, ts: before } = tss[m];
 
     const q = query(ref1.parent, where("ts", ">", before));
-    const querySS = await fs.getDocs(q);
+    const querySS = await fst.getDocs(q);
     expect(
       querySS.docs.every((doc) => doc.data().ts.toMillis() > before.toMillis())
     ).toBeTruthy();
@@ -378,7 +376,7 @@ describe(`can get docs which have Timestamp value`, () => {
 
   test(`Timestample is able to be ordered by orderBy`, async () => {
     const q = query(tsCol, orderBy("ts"));
-    const { docs } = await fs.getDocs(q);
+    const { docs } = await fst.getDocs(q);
     let prev = 0;
     expect.assertions(n + 1);
     expect(docs).toHaveLength(n);

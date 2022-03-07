@@ -1,12 +1,12 @@
-import * as firestore from "firebase/firestore";
+import * as fst from "firebase/firestore";
 import { GetData } from "./GetData.js";
 import { Schema, StrKeyof } from "./index.js";
 
 export interface Collection<S extends Schema> {
   <P extends CollectionPaths<S>>(
-    DB: firestore.Firestore,
+    DB: fst.Firestore,
     ...paths: P
-  ): firestore.CollectionReference<GetData<S, P>>;
+  ): fst.CollectionReference<GetData<S, P>>;
 }
 
 export type CollectionPaths<S extends Schema> = StrKeyof<S> extends infer ColKey
