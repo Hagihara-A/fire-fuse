@@ -1,6 +1,6 @@
 import * as fst from "firebase/firestore";
 import { GetData } from "./GetData.js";
-import { Schema, StrKeyof } from "./index.js";
+import { ExcUndef, Schema, StrKeyof } from "./index.js";
 
 export interface Collection<S extends Schema> {
   <P extends CollectionPaths<S>>(
@@ -13,10 +13,14 @@ export type CollectionPaths<S extends Schema> = StrKeyof<S> extends infer ColKey
   ? ColKey extends StrKeyof<S>
     ? StrKeyof<S[ColKey]> extends infer DocKey
       ? DocKey extends StrKeyof<S[ColKey]>
-        ? S[ColKey][DocKey]["col"] extends Schema
+        ? S[ColKey][DocKey]["col"] extends Schema | undefined
           ?
               | [ColKey]
-              | [ColKey, DocKey, ...CollectionPaths<S[ColKey][DocKey]["col"]>]
+              | [
+                  ColKey,
+                  DocKey,
+                  ...CollectionPaths<ExcUndef<S[ColKey][DocKey]["col"]>>
+                ]
           : [ColKey]
         : never
       : never
