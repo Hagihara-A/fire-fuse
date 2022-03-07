@@ -1,23 +1,25 @@
-import * as firestore from "firebase/firestore";
-import { Defined, DocumentData, ExcUndef, Merge, StrKeyof } from "./index.js";
+import * as fst from "firebase/firestore";
+import {
+  Defined,
+  DocumentData,
+  ExcUndef,
+  Merge,
+  Schema,
+  StrKeyof,
+} from "./index.js";
 import { OrderByConstraint } from "./constraint/orderby.js";
 import { OtherConstraints } from "./constraint/other.js";
 import { WhereConstraint, GreaterOrLesserOp } from "./constraint/where.js";
+import { GetData } from "./GetData.js";
+import { DocumentPaths } from "./doc.js";
 
-export const query = <
-  T extends DocumentData,
-  CS extends readonly firestore.QueryConstraint[]
->(
-  query: firestore.Query<T>,
-  ...queryConstraints: CS
-) => {
-  return firestore.query(query, ...queryConstraints) as firestore.Query<
-    Merge<ConstrainedData<T, CS>>
-  >;
-};
+export interface Query<S extends Schema> {
+  <D extends GetData<S, DocumentPaths<S>>, CS extends fst.QueryConstraint[]>(
+    query: fst.Query<D>,
+    ...queryConstraints: CS
+  ): fst.Query<Merge<ConstrainedData<D, CS>>>;
+}
 
-// // クエリかけたフィールドが存在する
-// // 不正なクエリならnever
 export type Memory<T extends DocumentData> = {
   rangeField: StrKeyof<T>;
   eqField: StrKeyof<T>;
@@ -29,7 +31,7 @@ export type Memory<T extends DocumentData> = {
 
 export type ConstrainedData<
   T extends DocumentData,
-  C extends readonly firestore.QueryConstraint[],
+  C extends readonly fst.QueryConstraint[],
   Mem extends Memory<T> = {
     rangeField: StrKeyof<T>;
     eqField: never;
@@ -41,7 +43,7 @@ export type ConstrainedData<
 > = C extends []
   ? T
   : C extends readonly [infer H, ...infer Rest]
-  ? Rest extends readonly firestore.QueryConstraint[]
+  ? Rest extends readonly fst.QueryConstraint[]
     ? H extends WhereConstraint<infer U, infer F, infer OP, infer V>
       ? T extends U
         ? OP extends GreaterOrLesserOp
