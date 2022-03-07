@@ -12,9 +12,10 @@ import { OtherConstraints } from "./constraint/other.js";
 import { WhereConstraint, GreaterOrLesserOp } from "./constraint/where.js";
 import { GetData } from "./GetData.js";
 import { DocumentPaths } from "./doc.js";
+import { QueryConstraint } from "./constraint/QueryConstraint.js";
 
 export interface Query<S extends Schema> {
-  <D extends GetData<S, DocumentPaths<S>>, CS extends fst.QueryConstraint[]>(
+  <D extends GetData<S, DocumentPaths<S>>, CS extends QueryConstraint<D>[]>(
     query: fst.Query<D>,
     ...queryConstraints: CS
   ): fst.Query<Merge<ConstrainedData<D, CS>>>;
@@ -31,7 +32,7 @@ export type Memory<T extends DocumentData> = {
 
 export type ConstrainedData<
   T extends DocumentData,
-  C extends readonly fst.QueryConstraint[],
+  C extends readonly QueryConstraint<T>[],
   Mem extends Memory<T> = {
     rangeField: StrKeyof<T>;
     eqField: never;
@@ -43,7 +44,7 @@ export type ConstrainedData<
 > = C extends []
   ? T
   : C extends readonly [infer H, ...infer Rest]
-  ? Rest extends readonly fst.QueryConstraint[]
+  ? Rest extends readonly QueryConstraint<T>[]
     ? H extends WhereConstraint<infer U, infer F, infer OP, infer V>
       ? T extends U
         ? OP extends GreaterOrLesserOp
