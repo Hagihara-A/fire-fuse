@@ -30,10 +30,7 @@ export interface WhereConstraint<
   _value: V;
 }
 
-export type EqualOp = Extract<
-  fst.WhereFilterOp,
-  "in" | "not-in" | "==" | "!="
->;
+export type EqualOp = Extract<fst.WhereFilterOp, "in" | "not-in" | "==" | "!=">;
 
 export type GreaterOrLesserOp = Extract<
   fst.WhereFilterOp,
