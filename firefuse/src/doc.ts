@@ -1,40 +1,28 @@
-import * as firestore from "firebase/firestore";
-import { SchemaBase, GetData, DocumentData } from "./index.js";
-import { CollectionPaths } from "./collection.js";
+import * as fst from "firebase/firestore";
+import { GetData } from "./GetData.js";
+import { DocumentData, Schema, StrKeyof } from "./index.js";
 
-export interface Doc<S extends SchemaBase> {
+export interface Doc<S extends Schema> {
   <P extends DocumentPaths<S>>(
-    DB: firestore.Firestore,
+    firestore: fst.Firestore,
     ...paths: P
-  ): firestore.DocumentReference<GetData<S, P>>;
+  ): fst.DocumentReference<GetData<S, P>>;
   <T extends DocumentData>(
-    collectionRef: firestore.CollectionReference<T>,
-    ...id: [string] | []
-  ): firestore.DocumentReference<T>;
+    collectionRef: fst.CollectionReference<T>,
+    id: string
+  ): fst.DocumentReference<T>;
 }
 
-export const doc = <S extends SchemaBase>(): Doc<S> => {
-  // @ts-expect-error: Avoid infinite loop error. Deprecate in the future
-  return <
-    T extends DocumentData,
-    P extends [string, string, ...string[]] & DocumentPaths<S>
-  >(
-    DBorRef: firestore.Firestore | firestore.CollectionReference<T>,
-    ...paths: P | [string] | []
-  ) => {
-    if (DBorRef instanceof firestore.CollectionReference) {
-      if (paths[0]) return firestore.doc(DBorRef, paths[0]);
-      else return firestore.doc(DBorRef);
-    } else {
-      return firestore.doc(
-        DBorRef,
-        paths.join("/")
-      ) as firestore.DocumentReference<GetData<S, P>>;
-    }
-  };
-};
-
-export type DocumentPaths<S extends SchemaBase> = [
-  ...CollectionPaths<S>,
-  string
-];
+export type DocumentPaths<S extends Schema> = StrKeyof<S> extends infer ColKey
+  ? ColKey extends StrKeyof<S>
+    ? StrKeyof<S[ColKey]> extends infer DocKey
+      ? DocKey extends StrKeyof<S[ColKey]>
+        ? S[ColKey][DocKey]["col"] extends Schema
+          ?
+              | [ColKey, DocKey]
+              | [ColKey, DocKey, ...DocumentPaths<S[ColKey][DocKey]["col"]>]
+          : [ColKey, DocKey]
+        : never
+      : never
+    : never
+  : never;

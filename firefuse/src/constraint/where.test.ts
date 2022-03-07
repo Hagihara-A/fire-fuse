@@ -1,5 +1,5 @@
-import * as fs from "firebase/firestore";
-import { Assert, City, Exact, Room, TsTestData } from "../index.test.js";
+import * as fst from "firebase/firestore";
+import { Assert, City, Exact, Room } from "../index.test.js";
 import {
   LegalOperation,
   ArrayOp,
@@ -10,8 +10,8 @@ import {
 } from "./where.js";
 
 type RefTestData = {
-  readonly ref: fs.DocumentReference<Room>;
-  readonly refs: (fs.DocumentReference<Room> | null)[];
+  readonly ref: fst.DocumentReference<Room>;
+  readonly refs: (fst.DocumentReference<Room> | null)[];
 };
 
 describe(`LegalOperation`, () => {
@@ -32,7 +32,7 @@ describe(`LegalOperation`, () => {
     type _ = Assert<Exact<EqualOp | ArrayOp, OP>>;
   });
   test(`LegalOperation<{ a: fs.Timestamp }, "a"> is EqualOp | GreaterOrLesserOp`, () => {
-    type OP = LegalOperation<{ a: fs.Timestamp }, "a">;
+    type OP = LegalOperation<{ a: fst.Timestamp }, "a">;
     type _ = Assert<Exact<EqualOp | GreaterOrLesserOp, OP>>;
   });
 });
@@ -60,22 +60,18 @@ describe(`LegaolValue`, () => {
     type V = LegalValue<City, "state", "==">;
     type _ = Assert<Exact<string | null, V>>;
   });
-  test("LegalValue<City, 'state', '=='> is string | null", () => {
-    type V = LegalValue<TsTestData, "ts", "==">;
-    type _ = Assert<Exact<fs.Timestamp, V>>;
-  });
   test(`LegalValue<RefTestData, "ref", "=="> is DocRef<Room>`, () => {
     type V = LegalValue<RefTestData, "ref", "==">;
-    type _ = Assert<Exact<fs.DocumentReference<Room>, V>>;
+    type _ = Assert<Exact<fst.DocumentReference<Room>, V>>;
   });
   test(`LegalValue<RefTestData, "refs", "=="> is (DocRef | null)[]`, () => {
     type V = LegalValue<RefTestData, "refs", "==">;
-    type _ = Assert<Exact<(fs.DocumentReference<Room> | null)[], V>>;
+    type _ = Assert<Exact<(fst.DocumentReference<Room> | null)[], V>>;
   });
 });
 
 describe(`where`, () => {
-  const where = fs.where as Where<City>;
+  const where = fst.where as Where<City>;
 
   test("able to create where(capital, ==, true)", () => {
     expect(() => where("capital", "==", true)).not.toThrow();
