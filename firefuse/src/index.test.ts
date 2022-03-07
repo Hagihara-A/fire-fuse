@@ -77,10 +77,8 @@ export type CityV2 = {
   capital?: boolean;
   population?: number;
   regions?: string[];
-  history: {
-    createdAt: fst.Timestamp;
-    updatedAt?: fst.Timestamp[];
-  };
+  createdAt: fst.Timestamp;
+  updatedAt?: fst.Timestamp[];
   cityV1Ref?: fst.DocumentReference<City>;
 };
 
