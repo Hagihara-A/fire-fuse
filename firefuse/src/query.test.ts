@@ -344,19 +344,17 @@ describe(`can get docs which have Timestamp value`, () => {
   const orderBy = fst.orderBy as fuse.OrderBy<CityV2>;
 
   beforeAll(async () => {
-    const { commit, set } = fst.writeBatch(DB);
     for (let index = 0; index < n; index++) {
       const ts = fst.Timestamp.fromMillis(now.toMillis() + 1000 * 60 * index);
       const ref = doc(tsCol, `${index}`);
       tss.push({ ts, ref });
-      set(ref, {
+      await fst.setDoc(ref, {
         createdAt: ts,
         name: "",
         state: "",
         country: "",
       });
     }
-    await commit();
   });
 
   test(`can get docs where("timestamp", "==", Timestamp)`, async () => {
