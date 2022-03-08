@@ -9,7 +9,7 @@ export interface Doc<S extends Schema> {
   ): fst.DocumentReference<GetData<S, P>>;
   <T extends DocumentData>(
     collectionRef: fst.CollectionReference<T>,
-    id: string
+    id?: string
   ): fst.DocumentReference<T>;
 }
 
