@@ -84,7 +84,7 @@ cityOrderBy("regions"); // ❌ Can not sort by array field
 
 // Return value of query() is typed depending on your contraints like where() and orderBy()
 const cityCol = collection(DB, "cities", "v1", "cities");
-const q2 = query(
+const q1 = query(
   cityCol,
   cityWhere("population", ">", 22),
   cityWhere("population", "<", 30)
@@ -94,9 +94,9 @@ firestore.getDocs(q1).then(
 );
 
 // `as const` narrows type
-const q3 = query(cityCol, cityWhere("name", "==", "tokyo" as const)); // ✅: note `as const`
+const q2 = query(cityCol, cityWhere("name", "==", "tokyo" as const)); // ✅: note `as const`
 firestore
-  .getDocs(q4)
+  .getDocs(q2)
   .then((qs) => qs.docs.map((doc) => doc.data().name === "tokyo")); // Now, name is typed as `"tokyo"` because you queried it !!
 
 // query() detects all illegal constraints due to firestore's limitation
