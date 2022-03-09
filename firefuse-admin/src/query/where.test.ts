@@ -1,5 +1,5 @@
-import { Assert, City, DB, Match, User } from "../index.test.js";
-import { WhereData } from "./where.js";
+import { Assert, City, DB, Exact, Match, User } from "../index.test.js";
+import { LegalValue, WhereData } from "./where.js";
 
 describe(`where`, () => {
   const cities = DB.collection("cities");
@@ -38,5 +38,27 @@ describe(`where`, () => {
   test(`WhereData<User, "sex", "in", ["male", "female"]> matches { sex: "male" | "female" }`, () => {
     type D = WhereData<User, "sex", "not-in", readonly ["male", "female"]>;
     type _ = Assert<Match<{ sex: "other" }, D>>;
+  });
+});
+
+describe("LegalValue", () => {
+  test("(string | null)[] array-contains string | null", () => {
+    type T = {
+      a: (string | null)[];
+    };
+    type W = LegalValue<T, "a", "array-contains">;
+    type _ = Assert<Exact<string | null, W>>;
+  });
+  test("(string | null)[]| undefined array-contains string | null", () => {
+    type T = {
+      a?: (string | null)[];
+    };
+    type W = LegalValue<T, "a", "array-contains">;
+    type _ = Assert<Exact<string | null, W>>;
+  });
+
+  test("string | null", () => {
+    type V = LegalValue<City, "state", "==">;
+    type _ = Assert<Exact<string | null, V>>;
   });
 });
