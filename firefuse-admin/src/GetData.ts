@@ -1,7 +1,6 @@
-import { StrKeyof } from "firefuse";
 import { CollectionPaths } from "./collection.js";
 import { DocumentPaths } from "./doc.js";
-import { Schema, ExcUndef } from "./index.js";
+import { Schema, ExcUndef, StrKeyof } from "./index.js";
 
 export type GetData<
   S extends Schema,
