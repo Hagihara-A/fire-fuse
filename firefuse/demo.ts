@@ -1,99 +1,170 @@
 import * as fuse from "firefuse";
 import * as firestore from "firebase/firestore";
 
-type Schema = {
+// First of all, please define Schema
+type AppSchema = {
   user: {
-    doc: User;
-    subcollection: {
-      payment: {
-        doc: Payment;
-        subcollection: {
-          paymentLog: {
-            doc: PaymentLog;
-          };
+    [DocKey: string]: {
+      doc: User | Count;
+      col?: {
+        favRooms: { [DocKey: string]: { doc: Room } };
+      };
+    };
+    count: {
+      doc: Count;
+    };
+  };
+  cities: {
+    v1: {
+      doc: Record<string, never>;
+      col: {
+        cities: {
+          [DocKey: string]: { doc: City };
+        };
+      };
+    };
+    v2: {
+      doc: Record<string, never>;
+      col: {
+        newCities: {
+          [DocKey: string]: { doc: CityV2 };
         };
       };
     };
   };
 };
-type User = {
-  name: { first: string; last: number; middle?: string };
-  age?: number;
-  sex?: "male" | "female" | "other";
-  birthDay: firestore.Timestamp;
-  skills?: string[];
-  isStudent: boolean;
-};
-
-type Payment = {
-  company: string;
-  cardNumber: number;
-  expire: firestore.Timestamp;
-};
-
-type PaymentLog = {
-  settledAt: firestore.Timestamp;
-  amount: number;
-};
 
 const DB = firestore.getFirestore();
-const collection = firestore.collection as fuse.Collection<Schema>;
-const doc = firestore.doc as fuse.Doc<Schema>;
 
+// Second, cast original functions with firefuse's ones
+const doc = firestore.doc as unknown as fuse.Doc<AppSchema>;
+const collection =
+  firestore.collection as unknown as fuse.Collection<AppSchema>;
+const query = firestore.query as fuse.Query<AppSchema>;
+// That's it!
+
+// Path of `collection()` is type-safe even if it's nested
 collection(DB, "user"); // ✅
-collection(DB, "users"); // ❌: Type '"users"' is not assignable to type '"user"'
-collection(DB, "user", "uid", "payment", "pid", "paymentLog"); // ✅
-collection(DB, "user", "uid", "payment", "pid", "paymentsLog"); // ❌: Type '"paymentsLog"' is not assignable to type '"paymentLog"'
+collection(DB, "users"); // ❌ "users" is wrong
+collection(DB, "user", "uid", "favRooms"); // ✅
+collection(DB, "user", "uid", "favRoom"); // ❌ "favRoom" is wrong
 
-doc(DB, "user", "uid"); // ✅
-doc(DB, "users", "uid"); // ❌: Type '"users"' is not assignable to type '"user"'
-doc(DB, "user", "uid", "payment", "pid", "paymentsLog", "logid"); // ❌: Type '"paymentsLog"' is not assignable to type '"paymentLog"'
+// Given docs are typed
+const cityDocs = await firestore.getDocs(
+  collection(DB, "cities", "v1", "cities")
+);
+cityDocs.docs.map((doc) => {
+  const city = doc.data(); // Now, city is typed as `City`
+});
 
-const userCollection = collection(DB, "user"); // ✅
-doc(userCollection); // ✅
-doc(userCollection, "uid"); // ✅
+// Path of doc() is also type-safe
+doc(DB, "cities", "v1", "cities", "id"); // ✅
+doc(DB, "cities", "v2", "cities", "id"); // ❌ "cities" does not exsit under "v1"
 
-const userCol = collection(DB, "user");
-const { query } = fuse;
-const where = firestore.where as fuse.Where<User>;
-const orderBy = firestore.orderBy as fuse.OrderBy<User>;
+// doc() can take collection reference
+const userCol = collection(DB, "user"); // ✅
+doc(userCol); // ✅
+doc(userCol, "uid"); // ✅
 
-where("age", "==", 22); // ✅
-where("age", "==", "22"); // ❌: Argument of type 'string' is not assignable to parameter of type 'number'.
-where("skills", "array-contains", "c"); // ✅
-where("skills", "array-contains", ["c", "java"]); // ❌:Argument of type 'string[]' is not assignable to parameter of type 'string'.
+// Given document is also typed
+const userOrCountDoc = await firestore.getDoc(doc(userCol));
+const data = userOrCountDoc.data(); // Now, data is typed as `User | Count`
 
-orderBy("age"); // ✅
-orderBy("skills"); // ❌: Argument of type '"skills"' is not assignable to parameter of type '"age" | "sex" | "birthDay" | "isStudent"'
+// Args of where() are typed
+const cityWhere = firestore.where as fuse.Where<City>; // Cast `where` for each document on your own
+cityWhere("name", "==", "Tokyo"); // ✅
+cityWhere("name", "==", 22); // ❌ name field is `string`
+cityWhere("regions", "array-contains-any", ["c"]); // ✅
+cityWhere("regions", ">", ["c"]); // ❌ ">" is not allowed to query an array field
 
-const q1 = query(userCol, where("age", ">", 22), where("age", "<", 30)); // ✅: queried docs are typed to have `.age` property
-firestore.getDocs(q1).then((qs) => qs.docs.map((doc) => doc.data().age)); // `.age` became required property!!
+// Args of orderBy() are typed
+const cityOrderBy = firestore.orderBy as fuse.OrderBy<City>;
+cityOrderBy("name"); // ✅
+cityOrderBy("regions"); // ❌ Can not sort by array field
 
-const q2 = query(userCol, where("age", ">", 22), where("sex", "<", "male")); // ❌: filter on multiple field (firestore's limitation).
-firestore.getDocs(q2).then((qs) => qs.docs.map((doc) => doc.data().age)); // doc.data() is never
+// Return value of query() is typed depending on your contraints like where() and orderBy()
+const cityCol = collection(DB, "cities", "v1", "cities");
+const q1 = query(
+  cityCol,
+  cityWhere("population", ">", 22),
+  cityWhere("population", "<", 30)
+); // ✅
+firestore.getDocs(q1).then(
+  (ss) => ss.docs.map((doc) => doc.data().population) // Now, `population` is `number`, not `number | undefined`. Because queried filed must exist
+);
 
-const q3 = query(
-  userCol,
-  where("age", ">", 22),
-  where("sex", "not-in", ["male"])
-); // ❌: "<", "<=", ">=", ">", "!=" and not-in must filter the same field (firestore's limitation).
-firestore.getDocs(q3).then((qs) => qs.docs.map((doc) => doc.data().age)); // doc.data() is never
+// `as const` narrows type
+const q2 = query(cityCol, cityWhere("name", "==", "tokyo" as const)); // ✅: note `as const`
+firestore
+  .getDocs(q2)
+  .then((qs) => qs.docs.map((doc) => doc.data().name === "tokyo")); // Now, name is typed as `"tokyo"` because you queried it !!
 
-const q4 = query(userCol, where("sex", "!=", "male" as const)); // ✅: note `as const`
-firestore.getDocs(q4).then((qs) => qs.docs.map((doc) => doc.data().sex)); // now, sex is `"female" | "other"` because you removed it !!
-
-const q5 = query(userCol, where("age", "==", 30 as const)); // ✅: note `as const`
-firestore.getDocs(q5).then((qs) => qs.docs.map((doc) => doc.data().age === 30)); // now age === 30, becase you queried!!
-
+// query() detects all illegal constraints due to firestore's limitation
+// example1
 query(
-  userCol,
-  where("sex", "in", ["female", "male"]),
-  where("age", "not-in", [22, 23]),
-  where("skills", "array-contains-any", ["c", "java"])
-); // ❌:  in, not-in or array-contains-any must not be used at the same time and appear only once (firestore's limitation).
+  cityCol,
+  cityWhere("population", ">", 22),
+  cityWhere("name", "!=", "Tokyo")
+); // ❌: You will get `never` becasue you can perform range (<, <=, >, >=) or not equals (!=) comparisons only on a single field
 
-query(userCol, where("age", "<", 22), orderBy("age"), orderBy("birthDay")); // ✅
-query(userCol, where("age", ">", 23), orderBy("birthDay")); //❌: if you include a filter with a range comparison (<, <=, >, >=), your first ordering must be on the same field: (firestore's limitation)
+// example2
+query(
+  cityCol,
+  cityWhere("population", ">", 22),
+  cityWhere("name", "not-in", ["tokyo"])
+); // You will get `never`
+// In a compound query, range (<, <=, >, >=) and not equals (!=, not-in) comparisons must all filter on the same field.
+
+// example3
+query(
+  cityCol,
+  cityWhere("population", "<", 22),
+  cityOrderBy("population"),
+  cityOrderBy("name")
+); // ✅
+query(cityCol, cityWhere("population", "<", 22), cityOrderBy("name")); //❌ This returns `never`
+// if you include a filter with a range comparison (<, <=, >, >=), your first ordering must be on the same field: (firestore's limitation)
 
 // use other constraints
 const { limit, limitToLast, startAt, startAfter, endAt, endBefore } = fuse;
+
+type User = {
+  name: string;
+  age: number;
+  sex: "male" | "female" | "other";
+};
+
+type Room = {
+  size: number;
+  rooms: {
+    living: number;
+    dining: number;
+    kitchen: number;
+  };
+  city: firestore.DocumentReference<City>;
+};
+
+type Count = {
+  allDocumentCount?: number;
+};
+
+type City = {
+  name: string;
+  state: string | null;
+  country: string;
+  capital?: boolean;
+  population?: number;
+  regions?: string[];
+};
+
+type CityV2 = {
+  name: string;
+  state: string | null;
+  country: string;
+  capital?: boolean;
+  population?: number;
+  regions?: string[];
+  createdAt: firestore.Timestamp;
+  updatedAt?: firestore.Timestamp[];
+  cityV1Ref?: firestore.DocumentReference<City>;
+};
