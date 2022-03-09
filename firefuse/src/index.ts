@@ -30,11 +30,11 @@ export type ExcUndef<T> = Exclude<T, undefined>;
 export type Defined<T extends DocumentData, K extends StrKeyof<T>> = T &
   { [L in K]-?: ExcUndef<T[K]> };
 
-export type Merge<T extends DocumentData> = { [K in keyof T]: T[K] };
-
-export * from "./doc.js";
 export * from "./collection.js";
+export * from "./doc.js";
+export * from "./GetData.js";
 export * from "./query.js";
 export * from "./constraint/orderby.js";
 export * from "./constraint/where.js";
 export * from "./constraint/other.js";
+export * from "./constraint/QueryConstraint.js";

@@ -1,12 +1,5 @@
 import * as fst from "firebase/firestore";
-import {
-  Defined,
-  DocumentData,
-  ExcUndef,
-  Merge,
-  Schema,
-  StrKeyof,
-} from "./index.js";
+import { Defined, DocumentData, ExcUndef, Schema, StrKeyof } from "./index.js";
 import { OrderByConstraint } from "./constraint/orderby.js";
 import { OtherConstraints } from "./constraint/other.js";
 import { WhereConstraint, GreaterOrLesserOp } from "./constraint/where.js";
@@ -18,7 +11,11 @@ export interface Query<S extends Schema> {
   <D extends GetData<S, DocumentPaths<S>>, CS extends QueryConstraint<D>[]>(
     query: fst.Query<D>,
     ...queryConstraints: CS
-  ): fst.Query<Merge<ConstrainedData<D, CS>>>;
+  ): ConstrainedData<D, CS> extends infer CD
+    ? CD extends never
+      ? never
+      : fst.Query<CD>
+    : never;
 }
 
 export type Memory<T extends DocumentData> = {
