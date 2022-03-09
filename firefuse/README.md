@@ -1,15 +1,21 @@
-# firefuse. Definitely typeing utilities for firestore.
+# firefuse
 
-`firefuse` provides zero-runtime utilities for `firestore`. `firefuse` introduce type strictness to your code.
+Powerful typing utilities for `firestore`.
 
-You can go back to original `firestore` if `firefuse` is inconvinient, because `firefuse` just cast `firestore`'s type.
+`firefuse` does nothing but makes your code much stricter.
+
+You can go back to original `firestore` if `firefuse` is inconvinient, because `firefuse` just cast `firestore`.
 
 ## Features
 
 1. Type-safe path.
 1. Argumants and return value of `doc()` and `collection()` are typed.
 1. Type-safe `where()` and `orderBy()`. For example, prohibiting querying with `string` whose type is actually `number`, cannot use `array-contains` for non-array field ... and more!
-1. Type and logic safe `query()`. Querid field is strictly typed and `firefuse` ensures query is **legal** under firestore's requirements. For example, you CANNOT filter two or more fields, order unfilterd field ... and many more. `firefuse` detects all illegal query on behalf of you.
+1. Type and logic safe `query()`. Querid field is strictly typed and `firefuse` ensures query is **legal** under firestore's requirements. For example, you CANNOT filter two or more fields, order unfilterd field ... and many more. `firefuse` detects all illegal queries on behalf of you.
+
+## Demo
+
+[here](https://githubbox.com/Hagihara-A/fire-fuse/blob/master/firefuse/demo.ts)
 
 ## Getting started
 
@@ -19,9 +25,11 @@ You can go back to original `firestore` if `firefuse` is inconvinient, because `
 npm i firefuse firebase@9
 ```
 
+`firefuse` is only for `firebase@9` currently.
+
 ### Define Your schema
 
-`Schema` is just plain Typescript's type. Interface is following.
+`Schema` is just plain Typescript's type.
 
 ```ts
 export interface Schema {
@@ -34,7 +42,7 @@ export interface Schema {
 }
 ```
 
-This is example
+This is the example
 
 ```ts
 type AppSchema = {
@@ -82,11 +90,13 @@ That's it!
 
 Use as you did. `firefuse` provides almost compatible API with `firestore`.
 
-Then I will show how powerful `fuirefuse` is.
+Next, I will show how powerful `fuirefuse` is.
 
 ## Type-safe path
 
-When you pass a wrong path, `firefuse` throws error.You can see `user` is OK, while `users` is wrong.
+Path is typed besed on the schema. You can't pass wring path.
+
+In this example, You can see `user` is OK, while `users` is wrong.
 
 ```ts
 collection(DB, "user"); // ✅
@@ -111,9 +121,9 @@ cityDocs.docs.map((doc) => {
 
 ## Type-safe where() and orderBy()
 
-`firefuse` enable `where()` and `orderBy()` to be much more type-safe. For example you CANNOT specify `array-contains-any` in not-array field, CANNOT specify `<, <=, >=, >` in not-primitive field.
+`firefuse` makes `where()` and `orderBy()` be much type-safer. For example you CANNOT specify `array-contains-any` in not-array field, CANNOT specify `<, <=, >=, >` in not-primitive field.
 
-It's actually possible. If you **really** need it, please use original `firestore`.
+It's actually possible. If you **really** need it, please use original ones.
 
 Args of `where()` is strictly typed.
 
@@ -150,7 +160,7 @@ firestore.getDocs(q1).then(
 );
 ```
 
-And, if you query with `as const`, `query()` narrows field type.
+And, if you query with `as const` clause, `query()` narrows field type.
 In the following code, `doc.data().name` is typed as `"tokyo"`, not `string`.
 
 ```ts
@@ -162,7 +172,7 @@ firestore
 
 ## Logic-safe query()
 
-`firefuse` detects all illegal queries. Details [here](https://firebase.google.com/docs/firestore/query-data/queries#query_limitations). This is not available in `firefuse-admin` currently.
+`firefuse` detects all illegal queries. Details [here](https://firebase.google.com/docs/firestore/query-data/queries#query_limitations). This feature is not available in `firefuse-admin` currently.
 
 ### example1
 
@@ -187,7 +197,3 @@ query(
   cityWhere("name", "not-in", ["tokyo"])
 ); // You will get `never`
 ```
-
-## Complete Demo
-
-[here](https://githubbox.com/Hagihara-A/fire-fuse/blob/master/firefuse/demo.ts)
