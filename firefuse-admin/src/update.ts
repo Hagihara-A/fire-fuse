@@ -5,11 +5,14 @@ export type UpdateData<T extends DocumentData> = {
   [P in UpdatePaths<T>]?: UpdateValue<T, P>;
 };
 
-export type UpdatePaths<T extends DocumentData> = {
-  [K in StrKeyof<T>]: ExcUndef<T[K]> extends DocumentData
-    ? `${K}` | `${K}.${UpdatePaths<ExcUndef<T[K]>>}`
-    : `${K}`;
-}[StrKeyof<T>];
+export type UpdatePaths<T extends DocumentData> = StrKeyof<T> extends infer K
+  ? K extends StrKeyof<T>
+    ? ExcUndef<T[K]> extends DocumentData
+      ? // @ts-expect-error judged as too deep
+        `${K}` | `${K}.${UpdatePaths<ExcUndef<T[K]>>}`
+      : `${K}`
+    : never
+  : never;
 
 export type UpdateValue<
   T extends DocumentData,
