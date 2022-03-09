@@ -34,6 +34,7 @@ export type ExcUndef<T> = Exclude<T, undefined>;
 export type Defined<T extends DocumentData, K extends StrKeyof<T>> = T &
   { [L in K]-?: ExcUndef<T[K]> };
 
+// @ts-expect-error judged as too deep
 export interface FuseFirestore<S extends Schema> extends fst.Firestore {
   doc<P extends DocumentPaths<S>>(
     documentPath: P
