@@ -1,6 +1,6 @@
 {
   "name": "firefuse",
-  "version": "3.0.0-alpha.1",
+  "version": "3.0.0-alpha.2",
   "description": "Definitely typed utilities for firestore",
   "type": "module",
   "repository": "https://github.com/Hagihara-A/fire-fuse",
