@@ -47,7 +47,6 @@ DB.collection("user/uid/favRoom"); // ❌ "favRoom" is wrong
 
 // Given docs are typed
 const cityDocs = await DB.collection("cities/v1/cities").get();
-
 cityDocs.docs.map((doc) => {
   const city = doc.data(); // Now, city is typed as `City`
 });
@@ -66,10 +65,6 @@ cityCol.where("name", "==", "Tokyo"); // ✅
 cityCol.where("name", "==", 22); // ❌ name field is `string`
 cityCol.where("regions", "array-contains-any", ["c"]); // ✅
 cityCol.where("regions", ">", ["c"]); // ❌ ">" is not allowed to query an array field
-
-// Args of orderBy() are typed
-cityCol.orderBy("name"); // ✅
-cityCol.orderBy("regions"); // ❌ Can not sort by array field
 
 // Return value of query() is typed depending on your contraints like where() and orderBy()
 const q1 = await cityCol
