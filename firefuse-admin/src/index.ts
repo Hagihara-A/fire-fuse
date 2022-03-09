@@ -12,7 +12,7 @@ export type FieldType =
   | fst.Timestamp
   | FieldType[]
   | DocumentData
-  | FuseDocumentReference<DocumentData>;
+  | fst.DocumentReference<DocumentData>;
 
 export interface DocumentData {
   readonly [K: string]: FieldType;
