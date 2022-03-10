@@ -5,6 +5,7 @@ import * as fst from "firebase-admin/firestore";
 import * as fuse from "./index.js";
 
 const app = admin.initializeApp({ projectId: "abc" });
+// @ts-expect-error
 export const DB = admin.firestore(app) as fuse.FuseFirestore<MySchema>;
 
 export type MySchema = {
