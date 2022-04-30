@@ -5,6 +5,8 @@ import * as fst from "firebase-admin/firestore";
 import * as fuse from "./index.js";
 
 const app = admin.initializeApp({ projectId: "abc" });
+
+//@ts-expect-error too deep
 export const DB = admin.firestore(app) as fuse.FuseFirestore<MySchema>;
 
 export type MySchema = {
@@ -92,4 +94,33 @@ export type Never<T> = T extends never ? true : false;
 
 export type Assert<T extends true> = T;
 
-test("placeholder", () => {});
+describe(`Schema`, () => {
+  test(`MySchema extends Schema`, () => {
+    type _ = Assert<Extends<MySchema, fuse.Schema>>;
+  });
+
+  test(`interface doesn't extend Schema`, () => {
+    interface A {
+      a: number;
+    }
+    type S = {
+      colName: {
+        [Dockey: string]: { doc: A };
+      };
+    };
+    type _ = Assert<NotExtends<S, fuse.Schema>>;
+  });
+
+  test(`comprehensive interface extends Schema`, () => {
+    interface A {
+      a: number;
+      [K: string]: number | never;
+    }
+    type S = {
+      colName: {
+        [Dockey: string]: { doc: A };
+      };
+    };
+    type _ = Assert<Extends<S, fuse.Schema>>;
+  });
+});

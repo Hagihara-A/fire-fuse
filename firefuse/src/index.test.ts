@@ -107,6 +107,33 @@ test(`Defined<{a?: string}, "a"> is {a: string}`, () => {
   type _ = Assert<Exact<{ a: string }, T>>;
 });
 
-test(`MySchema extends Schema`, () => {
-  type _ = Assert<Extends<MySchema, Schema>>;
+describe(`Schema`, () => {
+  test(`MySchema extends Schema`, () => {
+    type _ = Assert<Extends<MySchema, Schema>>;
+  });
+
+  test(`interface doesn't extend Schema`, () => {
+    interface A {
+      a: number;
+    }
+    type S = {
+      colName: {
+        [Dockey: string]: { doc: A };
+      };
+    };
+    type _ = Assert<NotExtends<S, Schema>>;
+  });
+
+  test(`comprehensive interface extends Schema`, () => {
+    interface A {
+      a: number;
+      [K: string]: number | never;
+    }
+    type S = {
+      colName: {
+        [Dockey: string]: { doc: A };
+      };
+    };
+    type _ = Assert<Extends<S, Schema>>;
+  });
 });
