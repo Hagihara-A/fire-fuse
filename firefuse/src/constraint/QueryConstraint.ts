@@ -1,6 +1,6 @@
 import { DocumentData, StrKeyof } from "../index.js";
 import { OrderByConstraint } from "./orderby.js";
-import { OtherConstraints } from "./other";
+import { OtherConstraints } from "./other.js";
 import { LegalOperation, LegalValue, WhereConstraint } from "./where.js";
 
 export type QueryConstraint<
