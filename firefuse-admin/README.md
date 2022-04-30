@@ -152,3 +152,25 @@ q2.docs.map((doc) => doc.data().name === "tokyo"); // Now, name is typed as `"to
 ## Logic-safe where()
 
 Sorry! Not yet available unlike `firefuse`.
+
+## Troubleshooting
+
+### My schema is not assignable to firefuse.Schema
+
+Probably, you used `interface` in your schema. please use `type` as possible.
+
+If you want to use `interaface`, define document's data type like this.
+
+```ts
+interface A {
+  a: number;
+  [K: string]: number | never; // if this line is missing, you got an error.
+}
+type S = {
+  colName: {
+    [Dockey: string]: { doc: A };
+  };
+};
+```
+
+Note that `[K: string]: number | never`. This line is necessary for `interface`.

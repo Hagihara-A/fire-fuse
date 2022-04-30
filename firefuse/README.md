@@ -11,7 +11,7 @@ You can go back to original `firestore` if `firefuse` is inconvinient, because `
 1. Type-safe path.
 1. Argumants and return value of `doc()` and `collection()` are typed.
 1. Type-safe `where()` and `orderBy()`. For example, prohibiting querying with `string` whose type is actually `number`, cannot use `array-contains` for non-array field ... and more!
-1. Type and logic safe `query()`. Querid field is strictly typed and `firefuse` ensures query is **legal** under firestore's requirements. For example, you CANNOT filter two or more fields, order unfilterd field ... and many more. `firefuse` detects all illegal queries on behalf of you.
+1. Type and logic safe `query()`. Querid field is strictly typed and `firefuse` ensures query is **legal** under firestore's requirements. For example, you CANNOT filter two or more fields, order by unfilterd field ... and many more. `firefuse` detects all illegal queries on behalf of you.
 
 ## Demo
 
@@ -197,3 +197,25 @@ query(
   cityWhere("name", "not-in", ["tokyo"])
 ); // You will get `never`
 ```
+
+## Troubleshooting
+
+### My schema is not assignable to firefuse.Schema
+
+Probably, you used `interface` in your schema. please use `type` as possible.
+
+If you want to use `interaface`, define document's data type like this.
+
+```ts
+interface A {
+  a: number;
+  [K: string]: number | never; // if this line is missing, you got an error.
+}
+type S = {
+  colName: {
+    [Dockey: string]: { doc: A };
+  };
+};
+```
+
+Note that `[K: string]: number | never`. This line is necessary for `interface`.
