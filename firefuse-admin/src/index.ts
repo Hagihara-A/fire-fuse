@@ -48,3 +48,5 @@ export interface FuseFirestore<S extends Schema> extends fst.Firestore {
 export * from "./query/Query.js";
 export * from "./query/where.js";
 export * from "./GetData.js";
+export { DocumentPaths } from "./doc.js";
+export { CollectionPaths } from "./collection.js";
