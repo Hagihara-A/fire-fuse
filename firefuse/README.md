@@ -198,6 +198,23 @@ query(
 ); // You will get `never`
 ```
 
+## Boilerplate
+
+```ts
+import * as firebase from "firebase/app";
+import * as firestore from "firebase/firestore";
+import * as fuse from "firefuse";
+export const fbapp = firebase.initializeApp({});
+export const DB = firestore.getFirestore(fbapp);
+
+export const doc = <P extends fuse.DocumentPaths<Schema>>(...path: P) =>
+  (firestore.doc as fuse.Doc<Schema>)(DB, ...path);
+export const collection = <P extends fuse.CollectionPaths<Schema>>(
+  ...path: P
+) => (firestore.collection as fuse.Collection<Schema>)(DB, ...path);
+export const query = firestore.query as fuse.Query<Schema>;
+```
+
 ## Troubleshooting
 
 ### My schema is not assignable to firefuse.Schema
