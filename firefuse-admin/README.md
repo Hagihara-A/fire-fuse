@@ -1,15 +1,21 @@
-# firefuse-admin. Definitely typed utilities for firestore
+# firefuse-admin
 
-## What can I do with this package?
+Powerful typing utilities for `firebase-admin/firestore`.
 
-This is the typescript-first utility package for `firestore`.
+`firefuse-admin` does nothing but makes your code much stricter.
 
-`firefuse-admin` provides
+You can stop using `firefuse-admin` if it is inconvinient at any time, because what `firefuse-admin` does is just casting `firestore`'s type.
 
-1. Fully compatible API with `firebase-admin`. You don't have to learn anything other than original one.
-2. Type-safe path.
-3. Automatically typed `.doc()` and `.collection()` inferred by the path you sepcified.
-4. Type-safe `where()`. For example, prohibiting querying `string` where actually `number` property, removing undefined from specified property, narrowing union type using `==, in, not-in` ... and more!
+## Features
+
+1. Type-safe path.
+1. Argumants and return value of `doc()` and `collection()` are typed.
+1. Arguments of `where()` are type safe. For example, prohibiting querying with `string` whose type is actually `number`, cannot use `array-contains` for non-array field ... and more!
+1. Return value of `where()` is also typed. Querid field exists certainly and narrows filed type when you queried with `as const` clause etc..
+
+## Demo
+
+[here](https://githubbox.com/Hagihara-A/fire-fuse/blob/master/firefuse-admin/demo.ts)
 
 ## Getting started
 
@@ -21,107 +27,148 @@ npm i firefuse-admin firebase-admin@10
 
 ### Define Your schema
 
-`Schema` is just plain Typescript's type. Interface is following.
+`Schema` is just plain Typescript's type.
 
 ```ts
-interface SchemaBase {
-  readonly [K: string]: {
-    doc: DocumentData;
-    subcollection?: SchemaBase;
+export interface Schema {
+  [CollectionKey: string]: {
+    [DocuemntKey: string]: {
+      doc: DocumentData;
+      col?: Schema;
+    };
   };
 }
 ```
 
-`K` is name of each collections. if `K` is `"user"|"posts"`, `user/{uid}` and `posts/{id}` are constructed.
-
-Sample schema is following.
+This is the example
 
 ```ts
-type Schema = {
-  user: {
-    doc: User;
-    subcollection: {
-      payment: {
-        doc: Payment;
-        subcollection: {
-          paymentLog: {
-            doc: PaymentLog;
-          };
+type AppSchema = {
+  cities: {
+    v1: {
+      doc: Record<string, never>;
+      col: {
+        cities: {
+          [DocKey: string]: { doc: City };
+        };
+      };
+    };
+    v2: {
+      doc: Record<string, never>;
+      col: {
+        newCities: {
+          [DocKey: string]: { doc: CityV2 };
         };
       };
     };
   };
 };
-type User = {
-  name: { first: string; last: number; middle?: string };
-  age?: number;
-  sex?: "male" | "female" | "other";
-  birthDay: Timestamp;
-  skills?: string[];
-  isStudent: boolean;
-};
-
-type Payment = {
-  company: string;
-  cardNumber: number;
-  expire: Timestamp;
-};
-
-type PaymentLog = {
-  settledAt: Timestamp;
-  amount: number;
-};
 ```
 
-NOTE: you can't use `Date` in your schema because firestore convert `Date` into `Timestamp` automatically. And `DocumentReference` is not supported currently.
+In this Schema, `cities` and `newCities` are collection names. `v1` and `v2` are document keys, which don't have any data in it.
 
-### Initialize app
+> NOTE: you can't use `Date` in your schema because firestore convert `Date` into `Timestamp` automatically.
+
+### Cast firestore
 
 ```ts
-import * as fuse from "firefuse-admin";
-import { initializeApp } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
-
-const app = initializeApp();
-const DB = getFirestore(app) as fuse.FuseFirestore<Schema>;
+//@ts-expect-error firefuse is too complex for tsc. Please add this line to ignore recursion limit.
+const DB = firestore.getFirestore() as fuse.FuseFirestore<AppSchema>;
 ```
 
 That's all!
 
-### Get reference
+### Use them
 
-You can't pass an unexist path.
+Use as you did. `firefuse-admin` provides almost compatible API with `firestore`.
 
-```ts
-DB.collection(`user`); // ✅
-DB.collection(`users`); // ❌: '"users"' is not assignable to parameter of type '"user" | `user/${string}/payment` | `user/${string}/payment/${string}/paymentLog`'.
+Next, I will show how powerful `firefuse-admin` is.
 
-DB.doc(`user/uid/payment/pid`); // ✅
-DB.doc("user/uid/nowhere/id") // this returns DocumentReference<never>
-  .get()
-  .then((ss) => ss.data().age); // ❌:'age' does not exist on type 'never'.
-```
+## Type-safe path
 
-For nested paths, firefuse-admin returns `DocumentReference<never>` instead of throwing an error at paths. This is because Typescript can't represent any `string` other than `"X"` .
+Path is typed besed on the schema.
 
-### Construct query
-
-`where` is also type-safe. For example you CANNOT specify `array-contains-any` in not-array field and CANNOT specify `<, <=, >=, >` in not-primitive field.
-
-Currently, `firefuse-admin` doesn't detect illegal query unlike `firefuse`.
+In this example, You can see `user` is OK, while `users` is wrong.
 
 ```ts
-const users = DB.collection(`user`);
-users
-  .where("age", "==", 22 as const) // ✅
-  .get()
-  .then((query) => query.docs[0].data().age); // `age` does exist and typed as `22`
-users.where("age", "==", "22"); // ❌:'string' is not assignable to parameter of type 'number'.
-users.where("age", "array-contains", 22); // ❌:'"array-contains"' is not assignable because `age` is number, not array
-users
-  .where("sex", "in", ["female", "male"] as const)
-  .get()
-  .then((ss) => ss.docs[0].data().sex); // sex is typed as "male" | "female"
+DB.collection("user"); // ✅
+DB.collection("users"); // ❌ "users" is wrong
+DB.collection("user/uid/favRooms"); // ✅
+DB.collection("user/uid/favRoom"); // ❌ "favRoom" is wrong
 
-// NOTE: currently, firefuse-admin doesn't detect illegal query(unlike firefuse)
+DB.doc("cities/v1/cities/id"); // ✅
+DB.doc("cities/v2/cities/id"); // ❌ "cities" does not exsit under "v1"
 ```
+
+## Returned snapshot is also typed
+
+`data()` is typed automatically from the path you wrote.
+
+```ts
+const cityDocs = await DB.collection("cities/v1/cities").get();
+cityDocs.docs.map((doc) => {
+  const city = doc.data(); // Now, city is typed as `City`
+});
+```
+
+## Type-safe where()
+
+`firefuse-admin` makes `where()` be much type-safer. `firefuse` prohibits you from applying `array-contains-any` to not-array fields or applying `<, <=, >=, >` to not-primitive fields. It's actually possible. If you **really** need it, please use original ones.
+
+Args of `where()` is strictly typed.
+
+```ts
+const cityCol = DB.collection("cities/v1/cities");
+cityCol.where("name", "==", "Tokyo"); // ✅
+cityCol.where("name", "==", 22); // ❌ name field is `string`
+cityCol.where("regions", "array-contains-any", ["c"]); // ✅
+cityCol.where("regions", ">", ["c"]); // ❌ ">" is not allowed to query an array field
+```
+
+## Type-safe query
+
+`firefuse-admin` introduce smarter type inference to return value of `where()`.
+In the below example, `population` is optional in `Schema`, but not optional after queried.
+
+```ts
+const q1 = await cityCol
+  .where("population", ">", 22)
+  .where("population", "<", 30)
+  .get();
+// ✅
+q1.docs.map((doc) => typeof doc.data().population === "number"); // Now, `population` is `number`, not `number | undefined`. Because queried filed must exist
+```
+
+And, if you query with `as const` clause, `where()` narrows field type.
+In the following code, `doc.data().name` is typed as `"tokyo"`, not `string`.
+
+```ts
+const q2 = await cityCol.where("name", "==", "tokyo" as const).get(); // ✅: note `as const`
+q2.docs.map((doc) => doc.data().name === "tokyo"); // Now, name is typed as `"tokyo"` because you queried it !!
+```
+
+## Logic-safe where()
+
+Sorry! Not yet available unlike `firefuse`.
+
+## Troubleshooting
+
+### My schema is not assignable to firefuse.Schema
+
+Probably, you used `interface` in your schema. please use `type` as possible.
+
+If you want to use `interaface`, define document's data type like this.
+
+```ts
+interface A {
+  a: number;
+  [K: string]: number | never; // if this line is missing, you got an error.
+}
+type S = {
+  colName: {
+    [Dockey: string]: { doc: A };
+  };
+};
+```
+
+Note that `[K: string]: number | never`. This line is necessary for `interface`.

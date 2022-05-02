@@ -1,17 +1,21 @@
-# firefuse. Definitely typed utilities for firestore
+# firefuse
 
-## What can I do with this package?
+Powerful typing utilities for `firestore`.
 
-This is the typescript-first utility package for `firestore`.
+`firefuse` does nothing but makes your code much stricter.
 
-`firefuse` provides
+You can stop using `firefuse` if it is inconvinient at any time, because what `firefuse` does is just casting `firestore`'s type.
 
-1. Zero-bundle package.
-2. Fully compatible API with `firebase`. You don't have to learn anything other than original one.
-3. Type-safe path.
-4. Automatically typed `doc()` and `collection()` inferred by the path you sepcified.
-5. Type-safe `where()`. For example, prohibiting querying with `string` whose type is actually `number`, removing undefined from specified property, narrowing union type using `==, in, not-in` ... and more!
-6. Type-safe `query()`. For example, you CANNOT filter two or more fields, order unfilterd field ... and many more. `firefuse` detects all illegal constraints.
+## Features
+
+1. Type-safe path.
+1. Argumants and return value of `doc()` and `collection()` are typed.
+1. Type-safe `where()` and `orderBy()`. For example, prohibiting querying with `string` whose type is actually `number`, cannot use `array-contains` for non-array field ... and more!
+1. Type and logic safe `query()`. Querid field is strictly typed and `firefuse` ensures query is **legal** under firestore's requirements. For example, you CANNOT filter two or more fields, order by unfilterd field ... and many more. `firefuse` detects all illegal queries on behalf of you.
+
+## Demo
+
+[here](https://githubbox.com/Hagihara-A/fire-fuse/blob/master/firefuse/demo.ts)
 
 ## Getting started
 
@@ -21,159 +25,212 @@ This is the typescript-first utility package for `firestore`.
 npm i firefuse firebase@9
 ```
 
+`firefuse` is only for `firebase@9` currently.
+
 ### Define Your schema
 
-`Schema` is just plain Typescript's type. Interface is following.
+`Schema` is just plain Typescript's type.
 
 ```ts
-interface SchemaBase {
-  readonly [K: string]: {
-    doc: DocumentData;
-    subcollection?: SchemaBase;
+export interface Schema {
+  [CollectionKey: string]: {
+    [DocuemntKey: string]: {
+      doc: DocumentData;
+      col?: Schema;
+    };
   };
 }
 ```
 
-`K` is name of each collections. if `K` is `"user"|"posts"`, `user/{uid}` and `posts/{id}` are constructed.
-
-Sample schema is following.
+This is the example
 
 ```ts
-type Schema = {
-  user: {
-    doc: User;
-    subcollection: {
-      payment: {
-        doc: Payment;
-        subcollection: {
-          paymentLog: {
-            doc: PaymentLog;
-          };
+type AppSchema = {
+  cities: {
+    v1: {
+      doc: Record<string, never>;
+      col: {
+        cities: {
+          [DocKey: string]: { doc: City };
+        };
+      };
+    };
+    v2: {
+      doc: Record<string, never>;
+      col: {
+        newCities: {
+          [DocKey: string]: { doc: CityV2 };
         };
       };
     };
   };
 };
-type User = {
-  name: { first: string; last: number; middle?: string };
-  age?: number;
-  sex?: "male" | "female" | "other";
-  birthDay: Timestamp;
-  skills?: string[];
-  isStudent: boolean;
-};
-
-type Payment = {
-  company: string;
-  cardNumber: number;
-  expire: Timestamp;
-};
-
-type PaymentLog = {
-  settledAt: Timestamp;
-  amount: number;
-};
 ```
 
-NOTE: you can't use `Date` in your schema because firestore convert `Date` into `Timestamp` automatically. And `DocumentReference` is not supported currently.
+In this Schema, `cities` and `newCities` are collection names. `v1` and `v2` are document keys, which don't have any data in it.
 
-### initialize app
+> NOTE: you can't use `Date` in your schema because firestore convert `Date` into `Timestamp` automatically.
+
+### Cast firestore functions
 
 ```ts
-const DB = firestore.getFirestore();
-const collection = firestore.collection as fuse.Collection<Schema>;
-const doc = firestore.doc as fuse.Doc<Schema>;
+const doc = firestore.doc as unknown as fuse.Doc<AppSchema>;
+const collection =
+  firestore.collection as unknown as fuse.Collection<AppSchema>;
+const query = firestore.query as fuse.Query<AppSchema>;
+const cityWhere = firestore.where as fuse.Where<City>;
+const cityOrderBy = firestore.orderBy as fuse.OrderBy<City>;
 ```
 
-### Get reference
+That's it!
 
-When you pass a wrong path, `firefuse` throws error.
-You can see `user` is OK, while `users` is wrong.
+> NOTE: Cast `where` and `orderBy` for **each document** on your own, because it depends the document type they constrain. `limit, startAt etc...` are type agnostic. You can use them anywhere as long as they are exported by `firefuse`.
+
+### Use them
+
+Use as you did. `firefuse` provides almost compatible API with `firestore`.
+
+Next, I will show how powerful `fuirefuse` is.
+
+## Type-safe path
+
+Path is typed besed on the schema.
+
+In this example, You can see `user` is OK, while `users` is wrong.
 
 ```ts
 collection(DB, "user"); // ✅
-collection(DB, "users"); // ❌: Type '"users"' is not assignable to type '"user"'
-collection(DB, "user", "uid", "payment", "pid", "paymentLog"); // ✅
-collection(DB, "user", "uid", "payment", "pid", "paymentsLog"); // ❌: Type '"paymentsLog"' is not assignable to type '"paymentLog"'
+collection(DB, "users"); // ❌ "users" is wrong
+collection(DB, "user", "uid", "favRooms"); // ✅
+collection(DB, "user", "uid", "favRoom"); // ❌ "favRoom" is wrong
 
-doc(DB, "user", "uid"); // ✅
-doc(DB, "users", "uid"); // ❌: Type '"users"' is not assignable to type '"user"'
-doc(DB, "user", "uid", "payment", "pid", "paymentsLog", "logid"); // ❌: Type '"paymentsLog"' is not assignable to type '"paymentLog"'
+doc(DB, "cities", "v1", "cities", "id"); // ✅
+doc(DB, "cities", "v2", "cities", "id"); // ❌ "cities" does not exsit under "v1"
 ```
 
-### Construct query
-
-First, cast your constraints using `firefuse`.
+## Returned snapshot is also typed
 
 ```ts
-const { query } = fuse;
-const where = firestore.where as fuse.Where<User>;
-const orderBy = firestore.orderBy as fuse.OrderBy<User>;
-const { limit, limitToLast, startAt, startAfter, endAt, endBefore } = fuse;
+const cityDocs = await firestore.getDocs(
+  collection(DB, "cities", "v1", "cities")
+);
+cityDocs.docs.map((doc) => {
+  const city = doc.data(); // Now, city is typed as `City`
+});
 ```
 
-NOTE: `where` and `orderBy` are per-document because it depends the document type they constrain. It means you have to create with each single ducment-type. `query` and other constraints `limit, startAt etc...` is type agnostic. You can use them in any place.
+## Type-safe where() and orderBy()
 
-`firefuse.query` is type-safe. For example you CANNOT specify `array-contains-any` in not-array field, CANNOT specify `<, <=, >=, >` in not-primitive field.
+`firefuse` makes `where()` and `orderBy()` be much type-safer. `firefuse` prohibits you from applying `array-contains-any` to not-array fields or applying `<, <=, >=, >` to not-primitive fields. It's actually possible. If you **really** need it, please use original ones.
 
-And more, `firefuse` detects all illegal constraints. Details [here](https://firebase.google.com/docs/firestore/query-data/queries#query_limitations).
-
-You cannot query with `string` on `number` field and cannot operate `array-contains` on non-array field.
+Args of `where()` is strictly typed.
 
 ```ts
-const userCol = collection(DB, "user");
-where("age", "==", 22); // ✅
-where("age", "==", "22"); // ❌: Argument of type 'string' is not assignable to parameter of type 'number'.
-where("skills", "array-contains", "c"); // ✅
-where("skills", "array-contains", ["c", "java"]); // ❌:Argument of type 'string[]' is not assignable to parameter of type 'string'.
+const cityWhere = firestore.where as fuse.Where<City>; // Cast `where` for each document on your own
+cityWhere("name", "==", "Tokyo"); // ✅
+cityWhere("name", "==", 22); // ❌ name field is `string`
+cityWhere("regions", "array-contains-any", ["c"]); // ✅
+cityWhere("regions", ">", ["c"]); // ❌ ">" is not allowed to query an array field
 ```
 
-`orderBy` is restricted only to apply in primitive field. It's not impossible, but hard to predict the result. If you REALLY want it, use original one.
+`orderBy()` as well.
 
 ```ts
-orderBy("age"); // ✅
-orderBy("skills"); // ❌: Argument of type '"skills"' is not assignable to parameter of type '"age" | "sex" | "birthDay" | "isStudent"'
+const cityOrderBy = firestore.orderBy as fuse.OrderBy<City>;
+cityOrderBy("name"); // ✅
+cityOrderBy("regions"); // ❌ Can not sort by array field
 ```
 
-`query` detects illegal constraints and convert type depending on your constraints. This is the most fancy feature.
+## Type-safe query()
+
+`firefuse` introduce smarter type inference to `query()`.
+In the below example, `population` is optional in `Schema`, but not optional after queried.
 
 ```ts
-const q1 = query(userCol, where("age", ">", 22), where("age", "<", 30)); // ✅: queried docs are typed to have `.age` property
-firestore.getDocs(q1).then((qs) => qs.docs.map((doc) => doc.data().age)); // `.age` became required property!! You don't have to do undefined check.
+const cityCol = collection(DB, "cities", "v1", "cities");
+const q1 = query(
+  cityCol,
+  cityWhere("population", ">", 22),
+  cityWhere("population", "<", 30)
+); // ✅
+firestore.getDocs(q1).then(
+  (ss) => ss.docs.map((doc) => doc.data().population) // Now, `population` is `number`, not `number | undefined`. Because queried filed must exist
+);
+```
 
-const q2 = query(userCol, where("age", ">", 22), where("sex", "<", "male")); // ❌: filter on multiple field (firestore's limitation).
-firestore.getDocs(q2).then((qs) => qs.docs.map((doc) => doc.data().age)); // doc.data() is never
+And, if you query with `as const` clause, `query()` narrows field type.
+In the following code, `doc.data().name` is typed as `"tokyo"`, not `string`.
 
-const q3 = query(
-  userCol,
-  where("age", ">", 22),
-  where("sex", "not-in", ["male"])
-); // ❌: "<", "<=", ">=", ">", "!=" and not-in must filter the same field (firestore's limitation).
-firestore.getDocs(q3).then((qs) => qs.docs.map((doc) => doc.data().age)); // doc.data() is never
+```ts
+const q2 = query(cityCol, cityWhere("name", "==", "tokyo" as const)); // ✅: note `as const`
+firestore
+  .getDocs(q2)
+  .then((qs) => qs.docs.map((doc) => doc.data().name === "tokyo")); // Now, name is typed as `"tokyo"` because you queried it !!
+```
 
-const q4 = query(userCol, where("sex", "!=", "male" as const)); // ✅: note `as const`
-firestore.getDocs(q4).then((qs) => qs.docs.map((doc) => doc.data().sex)); // now, sex is `"female" | "other"` because you removed it !!
+## Logic-safe query()
 
-const q5 = query(userCol, where("age", "==", 30 as const)); // ✅: note `as const`
-firestore.getDocs(q5).then((qs) => qs.docs.map((doc) => doc.data().age === 30)); // now age === 30, becase you queried!!
+`firefuse` detects all illegal queries. Details [here](https://firebase.google.com/docs/firestore/query-data/queries#query_limitations). This feature is not available in `firefuse-admin` currently.
 
+### example1
+
+In this code, `query()` returns `never` because becasue you can perform range (<, <=, >, >=) or not equals (!=) comparisons only on a single field.
+
+```ts
 query(
-  userCol,
-  where("sex", "in", ["female", "male"]),
-  where("age", "not-in", [22, 23]),
-  where("skills", "array-contains-any", ["c", "java"])
-); // ❌:  in, not-in or array-contains-any must not be used at the same time and appear only once (firestore's limitation).
-
-query(userCol, where("age", "<", 22), orderBy("age"), orderBy("birthDay")); // ✅
-query(userCol, where("age", ">", 23), orderBy("birthDay")); //❌: if you include a filter with a range comparison (<, <=, >, >=), your first ordering must be on the same field: (firestore's limitation)
+  cityCol,
+  cityWhere("population", ">", 22),
+  cityWhere("name", "!=", "Tokyo")
+); // ❌: You will get `never`
 ```
 
-## What does this package differ from other package?
+### example2
 
-There are a lot of firestore manipulating packages. But most of them use exclusive implementation e.g. their own class or imcompatible interface which means you CAN NOT use with other packages easily even if it doesn't provide enough utilities. But when it comes to `firefuse`, it can't happen. Because `firefuse` is a set of utility types, which return original firestore objects such as `DocumentRefence`, `CollectionRefence`, `orderBy`, `where`. In other words, `firefuse` is fully compatible with `firestore`. If `firefuse` doesn't provide enough features, you can go back to `firestore` at any time.
+In a compound query, range (<, <=, >, >=) and not equals (!=, not-in) comparisons must all filter on the same field.
 
-You can use `firefuse` and `react-firebase-hooks` at the same time (if `react-firebase-hooks` supports v9).
+```ts
+query(
+  cityCol,
+  cityWhere("population", ">", 22),
+  cityWhere("name", "not-in", ["tokyo"])
+); // You will get `never`
+```
 
-## Complete Demo
+## Boilerplate
 
-[here](https://github.com/Hagihara-A/fire-fuse/blob/master/firefuse/demo.ts)
+```ts
+import * as firebase from "firebase/app";
+import * as firestore from "firebase/firestore";
+import * as fuse from "firefuse";
+export const fbapp = firebase.initializeApp({});
+export const DB = firestore.getFirestore(fbapp);
+
+export const doc = <P extends fuse.DocumentPaths<Schema>>(...path: P) =>
+  (firestore.doc as fuse.Doc<Schema>)(DB, ...path);
+export const collection = <P extends fuse.CollectionPaths<Schema>>(
+  ...path: P
+) => (firestore.collection as fuse.Collection<Schema>)(DB, ...path);
+export const query = firestore.query as fuse.Query<Schema>;
+```
+
+## Troubleshooting
+
+### My schema is not assignable to firefuse.Schema
+
+Probably, you used `interface` in your schema. please use `type` as possible.
+
+If you want to use `interaface`, define document's data type like this.
+
+```ts
+interface A {
+  a: number;
+  [K: string]: number | never; // if this line is missing, you got an error.
+}
+type S = {
+  colName: {
+    [Dockey: string]: { doc: A };
+  };
+};
+```
+
+Note that `[K: string]: number | never`. This line is necessary for `interface`.

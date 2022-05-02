@@ -13,6 +13,12 @@
     "sample-web",
     "sample-admin"
   ],
+  "dependencies": {
+    "firebase": "^9.6.8",
+    "firebase-admin": "^10.0.2",
+    "firefuse": "latest",
+    "firefuse-admin": "latest"
+  },
   "devDependencies": {
     "@commitlint/cli": "^14.1.0",
     "@commitlint/config-conventional": "^14.1.0",
@@ -30,7 +36,7 @@
     "prettier": "^2.3.2",
     "semantic-release": "^18.0.0",
     "semantic-release-monorepo": "^7.0.5",
-    "typescript": "^4.4.2"
+    "typescript": "^4.6.2"
   },
   "private": true,
   "lint-staged": {

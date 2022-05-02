@@ -1,22 +1,28 @@
-import * as firestore from "firebase/firestore";
-import { SchemaBase, GetData } from "./index.js";
+import * as fst from "firebase/firestore";
+import { GetData } from "./GetData.js";
+import { ExcUndef, Schema, StrKeyof } from "./index.js";
 
-export interface Collection<S extends SchemaBase> {
+export interface Collection<S extends Schema> {
   <P extends CollectionPaths<S>>(
-    DB: firestore.Firestore,
+    DB: fst.Firestore,
     ...paths: P
-  ): firestore.CollectionReference<GetData<S, P>>;
+  ): fst.CollectionReference<GetData<S, P>>;
 }
 
-export const collection =
-  <S extends SchemaBase>(): Collection<S> =>
-  <P extends CollectionPaths<S>>(DB: firestore.Firestore, ...paths: P) =>
-    firestore.collection(DB, paths.join("/")) as firestore.CollectionReference<
-      GetData<S, P>
-    >;
-
-export type CollectionPaths<S extends SchemaBase> = {
-  [K in keyof S]: S[K]["subcollection"] extends SchemaBase
-    ? [K] | [K, string, ...CollectionPaths<S[K]["subcollection"]>]
-    : [K];
-}[keyof S];
+export type CollectionPaths<S extends Schema> = StrKeyof<S> extends infer ColKey
+  ? ColKey extends StrKeyof<S>
+    ? StrKeyof<S[ColKey]> extends infer DocKey
+      ? DocKey extends StrKeyof<S[ColKey]>
+        ? S[ColKey][DocKey]["col"] extends Schema | undefined
+          ?
+              | [ColKey]
+              | [
+                  ColKey,
+                  DocKey,
+                  ...CollectionPaths<ExcUndef<S[ColKey][DocKey]["col"]>>
+                ]
+          : [ColKey]
+        : never
+      : never
+    : never
+  : never;

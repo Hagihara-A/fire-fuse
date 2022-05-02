@@ -1,10 +1,25 @@
-import * as fs from "firebase/firestore";
-import { Collection } from "./collection.js";
-import { Assert, City, DB, Exact, MySchema } from "./index.test.js";
+import { CollectionPaths } from "./collection.js";
+import { Assert, Extends, MySchema, NotExtends } from "./index.test.js";
 
-export const collection = fs.collection as Collection<MySchema>;
+describe(`CollectionPaths`, () => {
+  type P = CollectionPaths<MySchema>;
+  test(`["user"] extends CollectionPaths`, () => {
+    type _ = Assert<Extends<["user"], P>>;
+  });
 
-test(`collection(DB, "cities") returuns CollectionReference<City>`, () => {
-  const cities = collection(DB, "cities");
-  type _ = Assert<Exact<fs.CollectionReference<City>, typeof cities>>;
+  test(`["user", string, "favRooms"] extends CollectionPaths`, () => {
+    type _ = Assert<Extends<["user", string, "favRooms"], P>>;
+  });
+
+  test(`["cities", "v1", "cities"] extends CollectionPaths`, () => {
+    type _ = Assert<Extends<["cities", "v1", "cities"], P>>;
+  });
+
+  test(`["cities", "v2", "cities"] extends CollectionPaths`, () => {
+    type _ = Assert<Extends<["cities", "v2", "cities"], P>>;
+  });
+
+  test(`["hoge", "huga", "piyo"] not extends CollectionPaths`, () => {
+    type _ = Assert<NotExtends<["hoge", "huga", "piyo"], P>>;
+  });
 });
