@@ -4,7 +4,7 @@ Powerful typing utilities for `firestore`.
 
 `firefuse` does nothing but makes your code much stricter.
 
-You can go back to original `firestore` if `firefuse` is inconvinient, because `firefuse` just cast `firestore`.
+You can stop using `firefuse` if it is inconvinient at any time, because what `firefuse` does is just casting `firestore`'s type.
 
 ## Features
 

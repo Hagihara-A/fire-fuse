@@ -4,7 +4,7 @@ Powerful typing utilities for `firebase-admin/firestore`.
 
 `firefuse-admin` does nothing but makes your code much stricter.
 
-You can go back to original `firestore` if `firefuse-admin` is inconvinient, because `firefuse-admin` just cast `firestore`.
+You can stop using `firefuse-admin` if it is inconvinient at any time, because what `firefuse-admin` does is just casting `firestore`'s type.
 
 ## Features
 
@@ -22,7 +22,7 @@ You can go back to original `firestore` if `firefuse-admin` is inconvinient, bec
 ### install
 
 ```sh
-npm i firefuse-admin firebase-admin
+npm i firefuse-admin firebase-admin@10
 ```
 
 ### Define Your schema
