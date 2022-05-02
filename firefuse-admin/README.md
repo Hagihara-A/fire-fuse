@@ -86,7 +86,7 @@ Next, I will show how powerful `firefuse-admin` is.
 
 ## Type-safe path
 
-Path is typed besed on the schema. You can't pass wrong path.
+Path is typed besed on the schema.
 
 In this example, You can see `user` is OK, while `users` is wrong.
 
@@ -113,14 +113,12 @@ cityDocs.docs.map((doc) => {
 
 ## Type-safe where()
 
-`firefuse-admin` makes `where()` be much type-safer. For example you CANNOT specify `array-contains-any` in not-array field, CANNOT specify `<, <=, >=, >` in not-primitive field.
-
-It's actually possible. If you **really** need it, please use original ones.
+`firefuse-admin` makes `where()` be much type-safer. `firefuse` prohibits you from applying `array-contains-any` to not-array fields or applying `<, <=, >=, >` to not-primitive fields. It's actually possible. If you **really** need it, please use original ones.
 
 Args of `where()` is strictly typed.
 
 ```ts
-const cityCol = DB.collection("cities/v1/cities"); // Cast `where` for each document on your own
+const cityCol = DB.collection("cities/v1/cities");
 cityCol.where("name", "==", "Tokyo"); // ✅
 cityCol.where("name", "==", 22); // ❌ name field is `string`
 cityCol.where("regions", "array-contains-any", ["c"]); // ✅
@@ -129,7 +127,7 @@ cityCol.where("regions", ">", ["c"]); // ❌ ">" is not allowed to query an arra
 
 ## Type-safe query
 
-`firefuse-admin` introduce more smart type inference to return value of `where()`.
+`firefuse-admin` introduce smarter type inference to return value of `where()`.
 In the below example, `population` is optional in `Schema`, but not optional after queried.
 
 ```ts

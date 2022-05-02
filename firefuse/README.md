@@ -94,7 +94,7 @@ Next, I will show how powerful `fuirefuse` is.
 
 ## Type-safe path
 
-Path is typed besed on the schema. You can't pass wring path.
+Path is typed besed on the schema.
 
 In this example, You can see `user` is OK, while `users` is wrong.
 
@@ -121,9 +121,7 @@ cityDocs.docs.map((doc) => {
 
 ## Type-safe where() and orderBy()
 
-`firefuse` makes `where()` and `orderBy()` be much type-safer. For example you CANNOT specify `array-contains-any` in not-array field, CANNOT specify `<, <=, >=, >` in not-primitive field.
-
-It's actually possible. If you **really** need it, please use original ones.
+`firefuse` makes `where()` and `orderBy()` be much type-safer. `firefuse` prohibits you from applying `array-contains-any` to not-array fields or applying `<, <=, >=, >` to not-primitive fields. It's actually possible. If you **really** need it, please use original ones.
 
 Args of `where()` is strictly typed.
 
@@ -145,7 +143,7 @@ cityOrderBy("regions"); // ❌ Can not sort by array field
 
 ## Type-safe query()
 
-`firefuse` introduce more smart type inference to `query()`.
+`firefuse` introduce smarter type inference to `query()`.
 In the below example, `population` is optional in `Schema`, but not optional after queried.
 
 ```ts
