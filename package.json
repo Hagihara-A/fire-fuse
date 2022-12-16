@@ -15,12 +15,7 @@
     "firefuse",
     "firefuse-admin"
   ],
-  "dependencies": {
-    "firebase": "^9.6.8",
-    "firebase-admin": "^10.0.2",
-    "firefuse": "latest",
-    "firefuse-admin": "latest"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@commitlint/cli": "^14.1.0",
     "@commitlint/config-conventional": "^14.1.0",
