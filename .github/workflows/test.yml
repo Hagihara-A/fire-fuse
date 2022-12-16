@@ -23,8 +23,8 @@ jobs:
           restore-keys: |
             turbo-${{ github.job }}
             turbo
-      - run: npm i
       - run: npm i -g npm@9
+      - run: npm i
       - run: npm run lint --cache-dir=$TURBO_CACHE_DIR
 
   build:
@@ -43,8 +43,8 @@ jobs:
           restore-keys: |
             turbo-${{ github.job }}
             turbo
-      - run: npm i
       - run: npm i -g npm@9
+      - run: npm i
       - run: npm run build --cache-dir=$TURBO_CACHE_DIR
 
   test:
@@ -64,6 +64,6 @@ jobs:
           restore-keys: |
             turbo-${{ github.job }}
             turbo
-      - run: npm i
       - run: npm i -g npm@9
+      - run: npm i
       - run: npm exec firebase emulators:exec 'npm test --cache-dir=$TURBO_CACHE_DIR'
