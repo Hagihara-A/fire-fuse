@@ -24,6 +24,7 @@ jobs:
             turbo-${{ github.job }}
             turbo
       - run: npm i
+      - run: npm i -g npm@9
       - run: npm run lint --cache-dir=$TURBO_CACHE_DIR
 
   build:
@@ -43,6 +44,7 @@ jobs:
             turbo-${{ github.job }}
             turbo
       - run: npm i
+      - run: npm i -g npm@9
       - run: npm run build --cache-dir=$TURBO_CACHE_DIR
 
   test:
@@ -63,4 +65,5 @@ jobs:
             turbo-${{ github.job }}
             turbo
       - run: npm i
+      - run: npm i -g npm@9
       - run: npm exec firebase emulators:exec 'npm test --cache-dir=$TURBO_CACHE_DIR'
