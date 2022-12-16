@@ -22,13 +22,12 @@ export type WhereData<
     ? T & { [K in F]: E }
     : never
   : OP extends "not-in"
-  ? T &
-      {
-        [K in F]-?: Exclude<
-          T[K],
-          (V extends readonly (infer E)[] ? E : never) | undefined
-        >;
-      }
+  ? T & {
+      [K in F]-?: Exclude<
+        T[K],
+        (V extends readonly (infer E)[] ? E : never) | undefined
+      >;
+    }
   : OP extends "array-contains"
   ? Defined<T, F>
   : OP extends "array-contains-any"

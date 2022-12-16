@@ -59,12 +59,11 @@ export type ConstrainedData<
             ? never
             : F extends Mem["rangeField"]
             ? ConstrainedData<
-                T &
-                  {
-                    [L in F]-?: ExcUndef<T[L]> extends V
-                      ? ExcUndef<T[L]>
-                      : Exclude<T[L], V | undefined>;
-                  },
+                T & {
+                  [L in F]-?: ExcUndef<T[L]> extends V
+                    ? ExcUndef<T[L]>
+                    : Exclude<T[L], V | undefined>;
+                },
                 Rest,
                 OverWrite<Mem, { prevNot: true }> & { rangeField: F }
               >
@@ -105,12 +104,11 @@ export type ConstrainedData<
             : F extends Mem["rangeField"]
             ? V extends readonly T[F][]
               ? ConstrainedData<
-                  T &
-                    {
-                      [L in F]-?: T[L] extends V[number]
-                        ? ExcUndef<T[L]>
-                        : Exclude<T[L], V[number] | undefined>;
-                    },
+                  T & {
+                    [L in F]-?: T[L] extends V[number]
+                      ? ExcUndef<T[L]>
+                      : Exclude<T[L], V[number] | undefined>;
+                  },
                   Rest,
                   OverWrite<Mem, { prevOr: true; prevNot: true }>
                 >
