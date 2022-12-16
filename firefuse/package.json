@@ -8,7 +8,7 @@
     "build": "tsc",
     "dev": "tsc -w",
     "test": "jest",
-    "lint": "eslint ./src && prettier -c ./src",
+    "lint": "npx eslint ./src && npx prettier ./src -c",
     "lint-fix": "eslint ./src --fix && prettier -w ./src",
     "test-w": "jest --watch",
     "prepublishOnly": "npm run build && npm pack",
