@@ -1,13 +1,13 @@
 {
   "scripts": {
-    "build": "npm exec turbo run build",
-    "dev": "npm exec turbo run dev",
-    "test": "npm exec turbo run test",
-    "lint": "npm exec turbo run lint",
-    "lint-fix": "npm exec turbo run lint-fix",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "lint-fix": "turbo run lint-fix",
     "emu": "firebase emulators:start --project hoge",
     "postinstall": "husky install",
-    "test-on-emu": "npx firebase emulators:exec 'npm test'",
+    "test-on-emu": "firebase emulators:exec 'npm test'",
     "release": "npm run release -ws --if-present"
   },
   "repository": "https://github.com/Hagihara-A/fire-fuse",
