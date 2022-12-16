@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "npx tsc",
     "dev": "tsc -w",
-    "test": "jest",
-    "lint": "eslint ./src && prettier -c ./src",
-    "lint-fix": "eslint ./src --fix && prettier -w ./src",
+    "test": "npx jest",
+    "lint": "npx eslint ./src && npx prettier -c ./src",
+    "lint-fix": "npx eslint ./src --fix && npx prettier -w ./src",
     "prepublishOnly": "npm run build && npm pack",
     "release": "npx semantic-release"
   },
