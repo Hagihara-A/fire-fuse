@@ -1,42 +1,34 @@
 {
   "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "lint-fix": "turbo run lint-fix",
     "emu": "firebase emulators:start --project hoge",
-    "prepare": "husky install",
-    "test": "npm test -ws --if-present",
-    "test-on-emu": "npx firebase emulators:exec 'npm test'",
+    "postinstall": "husky install",
+    "test-on-emu": "firebase emulators:exec 'npm test'",
     "release": "npm run release -ws --if-present"
   },
   "repository": "https://github.com/Hagihara-A/fire-fuse",
   "workspaces": [
     "firefuse",
-    "firefuse-admin",
-    "sample-web",
-    "sample-admin"
+    "firefuse-admin"
   ],
-  "dependencies": {
-    "firebase": "^9.6.8",
-    "firebase-admin": "^10.0.2",
-    "firefuse": "latest",
-    "firefuse-admin": "latest"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@commitlint/cli": "^14.1.0",
     "@commitlint/config-conventional": "^14.1.0",
     "@semantic-release/changelog": "^6.0.1",
     "@semantic-release/git": "^10.0.1",
     "@types/jest": "^27.0.1",
-    "@typescript-eslint/eslint-plugin": "^4.29.3",
-    "@typescript-eslint/parser": "^4.29.3",
-    "eslint": "^7.32.0",
-    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-prettier": "^8.5.0",
     "firebase-tools": "^9.6.1",
     "husky": "^7.0.2",
-    "jest": "^27.1.0",
     "lint-staged": "^11.1.2",
-    "prettier": "^2.3.2",
     "semantic-release": "^18.0.0",
     "semantic-release-monorepo": "^7.0.5",
-    "typescript": "^4.6.2"
+    "turbo": "^1.6.3"
   },
   "private": true,
   "lint-staged": {

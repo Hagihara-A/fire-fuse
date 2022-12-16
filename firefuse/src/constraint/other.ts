@@ -4,8 +4,7 @@ export interface OtherConstraints extends fst.QueryConstraint {
   readonly type: Exclude<fst.QueryConstraintType, "where" | "orderBy">;
 }
 
-export const limit = (limit: number) =>
-  fst.limit(limit) as OtherConstraints;
+export const limit = (limit: number) => fst.limit(limit) as OtherConstraints;
 export const limitToLast = (limit: number) =>
   fst.limitToLast(limit) as OtherConstraints;
 

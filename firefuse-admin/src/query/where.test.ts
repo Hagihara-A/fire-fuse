@@ -1,8 +1,7 @@
-import { Assert, City, DB, Exact, Match, User } from "../index.test.js";
+import { Assert, City, Exact, Match, User } from "../index.test.js";
 import { LegalValue, WhereData } from "./where.js";
 
 describe(`where`, () => {
-  const cities = DB.collection("cities");
   test(`WhereData<City, "capital", "==", true> matches { capital: true }`, () => {
     type D = WhereData<City, "capital", "==", true>;
     type _ = Assert<Match<{ capital: true }, D>>;

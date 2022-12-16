@@ -1,4 +1,4 @@
-import { Assert, DB, Extends, Match, Room } from "./index.test";
+import { Assert, Extends, Match, Room } from "./index.test";
 import { UpdateData, UpdatePaths } from "./update.js";
 
 describe(`UpdatePaths`, () => {

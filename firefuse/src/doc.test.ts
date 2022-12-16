@@ -6,7 +6,6 @@ import {
   Extends,
   MySchema,
   NotExtends,
-  Room,
 } from "./index.test.js";
 import { DocumentPaths } from "./doc.js";
 

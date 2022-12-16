@@ -27,8 +27,9 @@ export interface Schema {
 
 export type ExcUndef<T> = Exclude<T, undefined>;
 
-export type Defined<T extends DocumentData, K extends StrKeyof<T>> = T &
-  { [L in K]-?: ExcUndef<T[K]> };
+export type Defined<T extends DocumentData, K extends StrKeyof<T>> = T & {
+  [L in K]-?: ExcUndef<T[K]>;
+};
 
 export * from "./collection.js";
 export * from "./doc.js";
