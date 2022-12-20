@@ -8,8 +8,8 @@
     "build": "tsc",
     "dev": "tsc -w",
     "test": "jest",
-    "lint": "eslint ./src && prettier -c ./src",
-    "lint-fix": "eslint ./src --fix && prettier -w ./src",
+    "lint": "eslint . --ignore-path=../.eslintignore && prettier . -c --ignore-path=../.eslintignore",
+    "lint-fix": "eslint . --fix --ignore-path=../.eslintignore && prettier . -w --ignore-path=../.eslintignore",
     "test-w": "jest --watch",
     "prepublishOnly": "npm run build && npm pack",
     "release": "npx semantic-release"
