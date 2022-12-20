@@ -1,4 +1,5 @@
 import { Query } from "@google-cloud/firestore";
+
 import { DocumentData, StrKeyof } from "../index.js";
 import { LegalOperation, LegalValue, WhereData } from "./where.js";
 // import { OrderByDirection } from "@google-cloud/firestore";

@@ -1,10 +1,11 @@
 import { CollectionReference } from "@google-cloud/firestore";
+
 import {
   DocumentData,
+  ExcUndef,
   FuseQuery,
   Schema,
   StrKeyof,
-  ExcUndef,
 } from "./index.js";
 import { FuseDocumentReference } from "./reference.js";
 

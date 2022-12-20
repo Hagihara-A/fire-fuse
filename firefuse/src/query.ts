@@ -1,11 +1,12 @@
 import * as fst from "firebase/firestore";
-import { Defined, DocumentData, ExcUndef, Schema, StrKeyof } from "./index.js";
+
 import { OrderByConstraint } from "./constraint/orderby.js";
 import { OtherConstraints } from "./constraint/other.js";
-import { WhereConstraint, GreaterOrLesserOp } from "./constraint/where.js";
-import { GetData } from "./GetData.js";
-import { DocumentPaths } from "./doc.js";
 import { QueryConstraint } from "./constraint/QueryConstraint.js";
+import { GreaterOrLesserOp, WhereConstraint } from "./constraint/where.js";
+import { DocumentPaths } from "./doc.js";
+import { GetData } from "./GetData.js";
+import { Defined, DocumentData, ExcUndef, Schema, StrKeyof } from "./index.js";
 
 export interface Query<S extends Schema> {
   <D extends GetData<S, DocumentPaths<S>>, CS extends QueryConstraint<D>[]>(

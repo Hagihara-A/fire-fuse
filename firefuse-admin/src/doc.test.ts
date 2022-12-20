@@ -1,3 +1,4 @@
+import { DocumentPaths } from "./doc.js";
 import {
   Assert,
   City,
@@ -8,7 +9,6 @@ import {
   NotExtends,
 } from "./index.test.js";
 import { FuseDocumentReference } from "./reference.js";
-import { DocumentPaths } from "./doc.js";
 
 describe(`DocumentPaths`, () => {
   type P = DocumentPaths<MySchema>;

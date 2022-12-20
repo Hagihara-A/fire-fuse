@@ -2,6 +2,7 @@ process.env.FIRESTORE_EMULATOR_HOST = "localhost:8080";
 
 import * as admin from "firebase-admin";
 import * as fst from "firebase-admin/firestore";
+
 import * as fuse from "./index.js";
 
 const app = admin.initializeApp({ projectId: "abc" });

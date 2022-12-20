@@ -1,6 +1,6 @@
 import { CollectionPaths } from "./collection.js";
 import { DocumentPaths } from "./doc.js";
-import { Schema, ExcUndef, StrKeyof } from "./index.js";
+import { ExcUndef, Schema, StrKeyof } from "./index.js";
 
 export type GetData<
   S extends Schema,

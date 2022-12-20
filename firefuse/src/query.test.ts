@@ -1,4 +1,5 @@
 import * as fst from "firebase/firestore";
+
 import { OrderBy } from "./constraint/orderby.js";
 import { Where } from "./constraint/where.js";
 import * as fuse from "./index.js";

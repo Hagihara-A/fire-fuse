@@ -1,4 +1,5 @@
-import { Precondition, WriteResult, FieldPath } from "@google-cloud/firestore";
+import { FieldPath, Precondition, WriteResult } from "@google-cloud/firestore";
+
 import { DocumentData, ExcUndef, StrKeyof } from "./index.js";
 
 export type UpdateData<T extends DocumentData> = {

@@ -1,3 +1,4 @@
+import { CollectionPaths, FuseCollectionReference } from "./collection.js";
 import {
   Assert,
   City,
@@ -7,7 +8,6 @@ import {
   MySchema,
   NotExtends,
 } from "./index.test.js";
-import { CollectionPaths, FuseCollectionReference } from "./collection.js";
 
 describe(`CollectionPaths`, () => {
   type P = CollectionPaths<MySchema>;
