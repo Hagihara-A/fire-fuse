@@ -1,3 +1,4 @@
+import { DocumentPaths } from "./doc.js";
 import {
   Assert,
   collection,
@@ -7,7 +8,6 @@ import {
   MySchema,
   NotExtends,
 } from "./index.test.js";
-import { DocumentPaths } from "./doc.js";
 
 describe(`DocumentPaths`, () => {
   test(`["user", string] extends DocumentPaths`, () => {

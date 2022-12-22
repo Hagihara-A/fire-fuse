@@ -1,4 +1,5 @@
 import * as fst from "firebase/firestore";
+
 import { GetData } from "./GetData.js";
 import { DocumentData, Schema, StrKeyof } from "./index.js";
 

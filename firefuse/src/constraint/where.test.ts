@@ -1,10 +1,11 @@
 import * as fst from "firebase/firestore";
+
 import { Assert, City, Exact, Room } from "../index.test.js";
 import {
-  LegalOperation,
   ArrayOp,
   EqualOp,
   GreaterOrLesserOp,
+  LegalOperation,
   LegalValue,
   Where,
 } from "./where.js";

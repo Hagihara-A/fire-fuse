@@ -1,8 +1,9 @@
-import * as fst from "firebase/firestore";
 import { initializeApp } from "firebase/app";
-import { Defined, Schema } from "./index.js";
-import { Doc } from "./doc.js";
+import * as fst from "firebase/firestore";
+
 import { Collection } from "./collection.js";
+import { Doc } from "./doc.js";
+import { Defined, Schema } from "./index.js";
 import { Query } from "./query.js";
 
 const app = initializeApp({ projectId: "pid" });

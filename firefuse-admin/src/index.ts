@@ -1,8 +1,9 @@
 import * as fst from "@google-cloud/firestore";
+
 import { CollectionPaths, FuseCollectionReference } from "./collection.js";
 import { DocumentPaths } from "./doc.js";
-import { FuseDocumentReference } from "./reference.js";
 import { GetData } from "./GetData.js";
+import { FuseDocumentReference } from "./reference.js";
 
 export type FieldType =
   | string
@@ -46,8 +47,8 @@ export interface FuseFirestore<S extends Schema> extends fst.Firestore {
   ): FuseCollectionReference<GetData<S, P>>;
 }
 
+export { CollectionPaths } from "./collection.js";
+export { DocumentPaths } from "./doc.js";
+export * from "./GetData.js";
 export * from "./query/Query.js";
 export * from "./query/where.js";
-export * from "./GetData.js";
-export { DocumentPaths } from "./doc.js";
-export { CollectionPaths } from "./collection.js";

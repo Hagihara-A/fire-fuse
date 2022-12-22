@@ -1,5 +1,5 @@
 import { GetData } from "./GetData.js";
-import { MySchema, Assert, Exact } from "./index.test";
+import { Assert, Exact, MySchema } from "./index.test";
 
 describe(`GetData`, () => {
   test(`GetData<MySchema, "user"> is exactlly User | Count`, () => {

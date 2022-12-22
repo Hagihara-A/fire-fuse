@@ -1,9 +1,9 @@
 import {
+  Defined,
   DocumentData,
-  StrKeyof,
   ExcUndef,
   FieldType,
-  Defined,
+  StrKeyof,
 } from "../index.js";
 
 export type WhereData<
