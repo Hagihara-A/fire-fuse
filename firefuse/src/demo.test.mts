@@ -1,5 +1,6 @@
-import * as fuse from "firefuse";
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as firestore from "firebase/firestore";
+import * as fuse from "firefuse";
 
 // Define your schema
 type AppSchema = {
