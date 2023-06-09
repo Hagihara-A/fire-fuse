@@ -1,120 +1,126 @@
-import * as fuse from "firefuse-admin";
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as firestore from "firebase-admin/firestore";
+import * as fuse from "firefuse-admin";
 
-// First of all, please define Schema
+// Define your schema
 type AppSchema = {
+  // /user
   user: {
-    [DocKey: string]: {
-      doc: User | Count;
-      col?: {
-        favRooms: { [DocKey: string]: { doc: Room } };
-      };
-    };
-    count: {
-      doc: Count;
-    };
-  };
-  cities: {
-    v1: {
+    // user/general
+    general: {
       doc: Record<string, never>;
       col: {
-        cities: {
-          [DocKey: string]: { doc: City };
+        // /user/general/users
+        users: {
+          // /user/general/users/${id}
+          [id: string]: { doc: User };
         };
       };
     };
-    v2: {
+    // /user/admin
+    admin: {
       doc: Record<string, never>;
       col: {
-        newCities: {
-          [DocKey: string]: { doc: CityV2 };
+        // /users/admin/users
+        users: {
+          // /users/admin/users/${id}
+          [id: string]: { doc: AdminUser };
         };
       };
     };
   };
 };
-
-// Second, cast firestore instance with firefuse's ones
-//@ts-expect-error firefuse is too complex for tsc. Please add this line to ignore recursion limit.
-const DB = firestore.getFirestore() as fuse.FuseFirestore<AppSchema>;
-// That's it!
-
-// Path of `collection()` is type-safe even if it's nested
-DB.collection("user"); // ✅
-DB.collection("users"); // ❌ "users" is wrong
-DB.collection("user/uid/favRooms"); // ✅
-DB.collection("user/uid/favRoom"); // ❌ "favRoom" is wrong
-
-// Given docs are typed
-const cityDocs = await DB.collection("cities/v1/cities").get();
-cityDocs.docs.map((doc) => {
-  const city = doc.data(); // Now, city is typed as `City`
-});
-
-// Path of doc() is also type-safe
-DB.doc("cities/v1/cities/id"); // ✅
-DB.doc("cities/v2/cities/id"); // ❌ "cities" does not exsit under "v1"
-
-// Given document is also typed
-const userOrCountDoc = await DB.doc("user/uid").get();
-const data = userOrCountDoc.data(); // Now, data is typed as `User | Count`
-
-// Args of where() are typed
-const cityCol = DB.collection("cities/v1/cities"); // Cast `where` for each document on your own
-cityCol.where("name", "==", "Tokyo"); // ✅
-cityCol.where("name", "==", 22); // ❌ name field is `string`
-cityCol.where("regions", "array-contains-any", ["c"]); // ✅
-cityCol.where("regions", ">", ["c"]); // ❌ ">" is not allowed to query an array field
-
-// Return value of query() is typed depending on your contraints like where() and orderBy()
-const q1 = await cityCol
-  .where("population", ">", 22)
-  .where("population", "<", 30)
-  .get();
-// ✅
-q1.docs.map((doc) => typeof doc.data().population === "number"); // Now, `population` is `number`, not `number | undefined`. Because queried filed must exist
-
-// `as const` narrows type
-const q2 = await cityCol.where("name", "==", "tokyo" as const).get(); // ✅: note `as const`
-q2.docs.map((doc) => doc.data().name === "tokyo"); // Now, name is typed as `"tokyo"` because you queried it !!
 
 type User = {
   name: string;
-  age: number;
+  age?: number;
   sex: "male" | "female" | "other";
+  permissions: Permission[];
 };
 
-type Room = {
-  size: number;
-  rooms: {
-    living: number;
-    dining: number;
-    kitchen: number;
-  };
-  city: firestore.DocumentReference<City>;
+type AdminUser = {
+  fullName: string;
+  phoneNumbers: string[];
+  emails: string[];
+  permissions: Permission[];
 };
 
-type Count = {
-  allDocumentCount?: number;
-};
+type Permission = "create" | "read" | "update" | "delete";
 
-type City = {
-  name: string;
-  state: string | null;
-  country: string;
-  capital?: boolean;
-  population?: number;
-  regions?: string[];
-};
+// @ts-expect-error. firefuse-admin is too complex for tsc. This line is for ignoring recursion limit.
+const DB = firestore.getFirestore() as fuse.FuseFirestore<AppSchema>;
+// That's it!
 
-type CityV2 = {
-  name: string;
-  state: string | null;
-  country: string;
-  capital?: boolean;
-  population?: number;
-  regions?: string[];
-  createdAt: firestore.Timestamp;
-  updatedAt?: firestore.Timestamp[];
-  cityV1Ref?: firestore.DocumentReference<City>;
-};
+DB.collection("user"); // ✅
+DB.collection(
+  // @ts-expect-error. ❌ users is wrong.
+  "users"
+);
+
+// doc() can take collection reference
+const userCol = DB.collection("user"); // ✅
+userCol.doc("general"); // ✅
+userCol.doc(
+  // @ts-expect-error. "xxx" is neither "admin" nor "general"
+  "xxx"
+);
+// @ts-expect-error. Auto generated id is neither "admin" nor "general"
+userCol.doc();
+
+const userDoc = DB.doc("user/general/users/xxx");
+const user = await userDoc.get();
+const d: User | undefined = user.data(); // User | undefined
+
+// Args of where() are typed
+const users = DB.collection("user/general/users");
+users.where("name", "==", "aaa"); // ✅
+users.where(
+  "name",
+  "==",
+  // @ts-expect-error. Name field must be string
+  22
+);
+users.where(
+  "permissions",
+  "array-contains",
+  // @ts-expect-error. permission must be ("create" | "read" | "update" | "delete")[]
+  ["xxx"]
+);
+
+// Args of orderBy() are typed
+users.orderBy("name"); // ✅
+users.orderBy(
+  // @ts-expect-error. ❌ "xxx" is not field of User document
+  "xxx"
+);
+
+{
+  // Return value of query() is typed depending on your contraints.
+const q = users.where("age", ">", 20); // ✅
+const { docs } = await q.get();
+const age: number = docs[0].data().age; // ✅ Now, age is `number`. Not `number | undefined.`
+}
+{
+  // `as const` narrows type
+const q = users.where("name", "==", "arark" as const);
+const { docs } = await q.get();
+docs[0].data().name === "arark"; // ✅  name is "arark". Not `string`.
+}
+// query() detects all illegal constraints.
+{
+  // example1
+  // ❌ You will get `never` becasue you can perform range (<, <=, >, >=) or not equals (!=) comparisons only on a single field
+  const q: never = users.where("name", ">", "xxx").where("age", ">", 20);
+}
+{
+  // example2
+  // ❌ You will get `never`
+  // In a compound query, range (<, <=, >, >=) and not equals (!=, not-in) comparisons must all filter on the same field.
+  const q: never = users.where("age", ">", 22).where("name", "not-in", ["xxx"]);
+}
+{
+  // example3
+  // ❌ You will get `never`
+  // if you include a filter with a range comparison (<, <=, >, >=), your first ordering must be on the same field
+  const q: never = users.where("age", "<", 22).orderBy("name");
+}
