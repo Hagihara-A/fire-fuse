@@ -10,10 +10,6 @@
 2. Type-safe `where()` and `orderBy()`.
 3. Type and logic safe `query()`. `firefuse` ensures query is **legal** under firestore's requirements. For example, you CANNOT filter two or more fields. `firefuse` detects all illegal queries on behalf of you.
 
-## Demo
-
-[here](https://githubbox.com/Hagihara-A/fire-fuse/blob/master/firefuse/demo.ts)
-
 # Getting started
 
 ## install
