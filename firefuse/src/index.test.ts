@@ -24,7 +24,7 @@ export type MySchema = {
   };
   cities: {
     v1: {
-      doc: Record<string, never>;
+      doc: Empty;
       col: {
         cities: {
           [DocKey: string]: { doc: City };
@@ -32,11 +32,19 @@ export type MySchema = {
       };
     };
     v2: {
-      doc: Record<string, never>;
+      doc: Empty;
       col: {
         cities: {
           [DocKey: string]: { doc: CityV2 };
         };
+      };
+    };
+  };
+  "l1-c1": {
+    [K: string]: {
+      doc: Empty;
+      col: {
+        "l2-c1": { "l2-d1": { doc: L2D1 }; "l2-d2": { doc: L2D2 } };
       };
     };
   };
@@ -83,20 +91,30 @@ export type CityV2 = {
   cityV1Ref?: fst.DocumentReference<City>;
 };
 
-export type Extends<A, E> = [A] extends [E] ? true : false;
-export type NotExtends<A, E> = [A] extends [E] ? false : true;
+export type L2D1 = {
+  type: "L2D1";
+};
+export type L2D2 = {
+  type: "L2D2";
+};
+
+export type Empty = Record<string, never>;
+
+export type Extends<A, E> = A extends E ? true : false;
+type Not<B extends boolean> = B extends true ? false : true;
+export type NotExtends<A, E> = Not<Extends<A, E>>;
 export type Exact<A, B> = [A] extends [B]
   ? [B] extends [A]
     ? true
     : false
   : false;
 export type Match<E, A extends E> = Exact<E, Pick<A, keyof E>>;
-export type Never<T> = T extends never ? true : false;
+export type Never<T> = Exact<T, never>;
 
 export type Assert<T extends true> = T;
 
-export const doc = fst.doc as unknown as Doc<MySchema>;
-export const collection = fst.collection as unknown as Collection<MySchema>;
+export const doc = fst.doc as Doc<MySchema>;
+export const collection = fst.collection as Collection<MySchema>;
 export const query = fst.query as Query<MySchema>;
 
 afterAll(async () => {
