@@ -1,25 +1,17 @@
-import { DocumentPaths } from "./doc.js";
-import { CollectionPaths, Schema } from "./index.js";
-import { StrKeyof } from "./utils.js";
+import { CollectionPaths, DocumentPaths, Schema } from "./index.js";
 
 export type GetData<
   S extends Schema,
-  P extends CollectionPaths<S> | DocumentPaths<S>
-> = P extends [infer ColKey]
-  ? ColKey extends StrKeyof<Schema>
-    ? S[ColKey][StrKeyof<S[ColKey]>]["doc"]
-    : never
-  : P extends [infer ColKey, infer DocKey, ...infer Rest]
-  ? ColKey extends StrKeyof<S>
-    ? DocKey extends StrKeyof<S[ColKey]>
-      ? Rest extends []
-        ? S[ColKey][DocKey]["doc"]
-        : S[ColKey][DocKey]["col"] extends Schema
-        ? Rest extends
-            | CollectionPaths<S[ColKey][DocKey]["col"]>
-            | DocumentPaths<S[ColKey][DocKey]["col"]>
-          ? GetData<S[ColKey][DocKey]["col"], Rest>
-          : never
+  P extends DocumentPaths<S> | CollectionPaths<S>
+> = P extends [infer ColKey extends keyof S]
+  ? S[ColKey][keyof S[ColKey]]["doc"]
+  : P extends [infer ColKey extends keyof S, infer DocKey, ...infer Rest]
+  ? DocKey extends keyof S[ColKey]
+    ? Rest extends []
+      ? S[ColKey][DocKey]["doc"]
+      : S[ColKey][DocKey]["col"] extends infer SS extends Schema
+      ? Rest extends DocumentPaths<SS> | CollectionPaths<SS>
+        ? GetData<S[ColKey][DocKey]["col"], Rest>
         : never
       : never
     : never
