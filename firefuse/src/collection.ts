@@ -1,7 +1,8 @@
 import * as fst from "firebase/firestore";
 
 import { GetData } from "./GetData.js";
-import { ExcUndef, Schema, StrKeyof } from "./index.js";
+import { Schema } from "./index.js";
+import { ExcUndef, StrKeyof } from "./utils.js";
 
 export interface Collection<S extends Schema> {
   <P extends CollectionPaths<S>>(

@@ -1,7 +1,8 @@
 import * as fst from "firebase/firestore";
 
 import { GetData } from "./GetData.js";
-import { Schema, StrKeyof } from "./index.js";
+import { Schema } from "./index.js";
+import { StrKeyof } from "./utils.js";
 
 export interface Doc<S extends Schema> {
   <T extends StringDocKeyData<S>>(

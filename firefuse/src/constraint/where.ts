@@ -1,6 +1,7 @@
 import * as fst from "firebase/firestore";
 
-import { DocumentData, ExcUndef, FieldType, StrKeyof } from "../index.js";
+import { DocumentData, FieldType } from "../index.js";
+import { ExcUndef, StrKeyof } from "../utils.js";
 
 export interface Where<T extends DocumentData> {
   <

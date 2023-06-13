@@ -1,4 +1,5 @@
-import { DocumentData, StrKeyof } from "../index.js";
+import { DocumentData } from "../index.js";
+import { StrKeyof } from "../utils.js";
 import { OrderByConstraint } from "./orderby.js";
 import { OtherConstraints } from "./other.js";
 import { LegalOperation, LegalValue, WhereConstraint } from "./where.js";

@@ -3,8 +3,9 @@ import * as fst from "firebase/firestore";
 
 import { Collection } from "./collection.js";
 import { Doc } from "./doc.js";
-import { Defined, Schema } from "./index.js";
+import { Schema } from "./index.js";
 import { Query } from "./query.js";
+import { Defined } from "./utils.js";
 
 const app = initializeApp({ projectId: "pid" });
 export const DB = fst.getFirestore(app);

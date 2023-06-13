@@ -6,7 +6,8 @@ import { QueryConstraint } from "./constraint/QueryConstraint.js";
 import { GreaterOrLesserOp, WhereConstraint } from "./constraint/where.js";
 import { DocumentPaths } from "./doc.js";
 import { GetData } from "./GetData.js";
-import { Defined, DocumentData, ExcUndef, Schema, StrKeyof } from "./index.js";
+import { DocumentData, Schema } from "./index.js";
+import { Defined, ExcUndef, StrKeyof } from "./utils.js";
 
 export interface Query<S extends Schema> {
   <D extends GetData<S, DocumentPaths<S>>, CS extends QueryConstraint<D>[]>(
