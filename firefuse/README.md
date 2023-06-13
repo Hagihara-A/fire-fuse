@@ -83,7 +83,7 @@ import * as fuse from "fire-fuse";
 
 const doc = firestore.doc as fuse.Doc<AppSchema>;
 const collection = firestore.collection as fuse.Collection<AppSchema>;
-const query = firestore.query as fuse.Query<AppSchema>;
+const query = firestore.query as fuse.Query;
 ```
 
 That's it!

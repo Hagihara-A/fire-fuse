@@ -52,7 +52,7 @@ const DB = firestore.getFirestore();
 // Second, cast original functions with firefuse's ones
 const doc = firestore.doc as fuse.Doc<AppSchema>;
 const collection = firestore.collection as fuse.Collection<AppSchema>;
-const query = firestore.query as fuse.Query<AppSchema>;
+const query = firestore.query as fuse.Query;
 // That's it!
 
 collection(DB, "user"); // ✅
@@ -65,11 +65,8 @@ collection(
 // doc() can take collection reference
 const userCol = collection(DB, "user"); // ✅
 doc(userCol, "general"); // ✅
-doc(
-  userCol,
-  // @ts-expect-error. "xxx" is neither "admin" nor "general"
-  "xxx"
-);
+// @ts-expect-error. "xxx" is neither "admin" nor "general"
+doc(userCol, "xxx");
 // @ts-expect-error. Auto generated id is neither "admin" nor "general"
 doc(userCol);
 
