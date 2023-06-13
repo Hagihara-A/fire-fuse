@@ -44,17 +44,13 @@ export type LegalValue<
   F extends StrKeyof<T>,
   OP extends LegalOperation<T, F>
 > = ExcUndef<T[F]> extends infer V
-  ? OP extends "!=" | "=="
+  ? OP extends "!=" | "==" | GreaterOrLesserOp
     ? V
     : OP extends "in" | "not-in"
     ? V[]
-    : OP extends GreaterOrLesserOp
-    ? V extends UnOrderable
-      ? never
-      : V
     : OP extends "array-contains-any"
-    ? V extends (infer E)[]
-      ? E[]
+    ? V extends unknown[]
+      ? V
       : never
     : OP extends "array-contains"
     ? V extends (infer E)[]
@@ -63,21 +59,14 @@ export type LegalValue<
     : never
   : never;
 
-export type LegalOperation<T extends DocumentData, F extends StrKeyof<T>> =
+export type LegalOperation<T, F extends keyof T> =
   | (ExcUndef<T[F]> extends infer D
       ? D extends FieldType[]
         ? ArrayOp
-        : D extends UnOrderable
-        ? never
         : D extends Orderable
         ? GreaterOrLesserOp
         : never
       : never)
   | EqualOp;
 
-export type Orderable = Exclude<FieldType, UnOrderable>;
-
-export type UnOrderable =
-  | DocumentData
-  | FieldType[]
-  | fst.DocumentReference<DocumentData>;
+export type Orderable = FieldType;
