@@ -116,7 +116,7 @@ export type Assert<T extends true> = T;
 
 export const doc = fst.doc as Doc<MySchema>;
 export const collection = fst.collection as Collection<MySchema>;
-export const query = fst.query as Query<MySchema>;
+export const query = fst.query as Query;
 
 afterAll(async () => {
   await fst.terminate(DB);

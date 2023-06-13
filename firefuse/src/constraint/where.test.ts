@@ -24,9 +24,9 @@ describe(`LegalOperation`, () => {
     type T = LegalOperation<City, "regions">;
     type _ = Assert<Exact<ArrayOp | EqualOp, T>>;
   });
-  test(`LegalOperation<RefTestData, "ref"> is EqualOp`, () => {
+  test(`LegalOperation<RefTestData, "ref"> is EqualOp | GreaterOrLesserOp`, () => {
     type OP = LegalOperation<RefTestData, "ref">;
-    type _ = Assert<Exact<EqualOp, OP>>;
+    type _ = Assert<Exact<EqualOp | GreaterOrLesserOp, OP>>;
   });
   test(`LegalOperation<RefTestData, "refs"> is EqualOp | ArrayOp`, () => {
     type OP = LegalOperation<RefTestData, "refs">;
