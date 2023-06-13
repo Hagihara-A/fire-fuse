@@ -1,11 +1,11 @@
 import * as fst from "firebase/firestore";
 
-import { DocumentData, FieldType } from "../index.js";
-import { ExcUndef, StrKeyof } from "../utils.js";
+import { FieldType } from "../index.js";
+import { ExcUndef } from "../utils.js";
 
-export interface Where<T extends DocumentData> {
+export interface Where<T> {
   <
-    F extends StrKeyof<T>,
+    F extends keyof T,
     OP extends LegalOperation<T, F>,
     V extends Readonly<LegalValue<T, F, OP>>
   >(
@@ -21,8 +21,8 @@ export type ArrayOp = Extract<
 >;
 
 export interface WhereConstraint<
-  T extends DocumentData,
-  F extends StrKeyof<T>,
+  T,
+  F extends keyof T,
   OP extends LegalOperation<T, F>,
   V extends Readonly<LegalValue<T, F, OP>>
 > extends fst.QueryConstraint {
@@ -40,8 +40,8 @@ export type GreaterOrLesserOp = Extract<
 >;
 
 export type LegalValue<
-  T extends DocumentData,
-  F extends StrKeyof<T>,
+  T,
+  F extends keyof T,
   OP extends LegalOperation<T, F>
 > = ExcUndef<T[F]> extends infer V
   ? OP extends "!=" | "==" | GreaterOrLesserOp
