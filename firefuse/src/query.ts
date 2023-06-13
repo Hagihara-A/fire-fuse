@@ -4,13 +4,10 @@ import { OrderByConstraint } from "./constraint/orderby.js";
 import { OtherConstraints } from "./constraint/other.js";
 import { QueryConstraint } from "./constraint/QueryConstraint.js";
 import { GreaterOrLesserOp, WhereConstraint } from "./constraint/where.js";
-import { DocumentPaths } from "./doc.js";
-import { GetData } from "./GetData.js";
-import { DocumentData, Schema } from "./index.js";
 import { Defined, ExcUndef, StrKeyof } from "./utils.js";
 
-export interface Query<S extends Schema> {
-  <D extends GetData<S, DocumentPaths<S>>, CS extends QueryConstraint<D>[]>(
+export interface Query {
+  <D, CS extends QueryConstraint<D>[]>(
     query: fst.Query<D>,
     ...queryConstraints: CS
   ): ConstrainedData<D, CS> extends infer CD
@@ -20,9 +17,9 @@ export interface Query<S extends Schema> {
     : never;
 }
 
-export type Memory<T extends DocumentData> = {
-  rangeField: StrKeyof<T>;
-  eqField: StrKeyof<T>;
+type Memory<T> = {
+  rangeField: keyof T;
+  eqField: keyof T;
   prevNot: boolean;
   prevArrcon: boolean;
   prevOr: boolean;
@@ -30,7 +27,7 @@ export type Memory<T extends DocumentData> = {
 };
 
 export type ConstrainedData<
-  T extends DocumentData,
+  T,
   C extends readonly QueryConstraint<T>[],
   Mem extends Memory<T> = {
     rangeField: StrKeyof<T>;
@@ -118,7 +115,7 @@ export type ConstrainedData<
             : never
           : never
         : never
-      : H extends OrderByConstraint<infer K>
+      : H extends OrderByConstraint<T, infer K>
       ? Mem["prevOrderBy"] extends true
         ? ConstrainedData<Defined<T, K>, Rest, Mem>
         : K extends Mem["rangeField"]
@@ -134,12 +131,9 @@ export type ConstrainedData<
     : never
   : never;
 
-export type OR<T, U extends { [K in keyof T]?: unknown }> = {
+type OR<T, U extends { [K in keyof T]?: unknown }> = {
   [K in keyof T]: K extends keyof U ? T[K] | U[K] : T[K];
 };
-export type OverWrite<
-  T extends DocumentData,
-  U extends { [K in keyof T]?: unknown }
-> = {
+type OverWrite<T, U extends { [K in keyof T]?: unknown }> = {
   [K in keyof T]: K extends keyof U ? U[K] : T[K];
 };
