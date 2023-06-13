@@ -109,7 +109,6 @@ export type Exact<A, B> = [A] extends [B]
     ? true
     : false
   : false;
-export type Match<E, A extends E> = Exact<E, Pick<A, keyof E>>;
 export type Never<T> = Exact<T, never>;
 
 export type Assert<T extends true> = T;

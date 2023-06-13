@@ -12,7 +12,7 @@ import {
   DB,
   doc,
   Exact,
-  Match,
+  Extends,
   Never,
   query,
 } from "./index.test.js";
@@ -26,37 +26,37 @@ describe("ConstraintedData", () => {
       const cs = [where("population", ">=", 1000)] as const;
       type T = CD<City, typeof cs>;
 
-      type _ = Assert<Match<{ population: number }, T>>;
+      type _ = Assert<Extends<T, { population: number }>>;
     });
 
     test("field of == exists", () => {
       const cs = [where("capital", "==", true as const)] as const;
       type T = CD<City, typeof cs>;
-      type _ = Assert<Match<{ capital: true }, T>>;
+      type _ = Assert<Extends<T, { capital: true }>>;
     });
 
     test("field of != exists", () => {
       const cs = [where("name", "!=", "asd" as const)] as const;
       type T = CD<City, typeof cs>;
-      type _ = Assert<Match<{ name: string }, T>>;
+      type _ = Assert<Extends<T, { name: string }>>;
     });
 
     test("field of array-contains exists", () => {
       const cs = [where("regions", "array-contains", "asd")] as const;
       type T = CD<City, typeof cs>;
-      type _ = Assert<Match<{ regions: string[] }, T>>;
+      type _ = Assert<Extends<T, { regions: string[] }>>;
     });
 
     test("field of array-contains-any exists", () => {
       const cs = [where("regions", "array-contains-any", ["asd"])] as const;
       type T = CD<City, typeof cs>;
-      type _ = Assert<Match<{ regions: string[] }, T>>;
+      type _ = Assert<Extends<T, { regions: string[] }>>;
     });
 
     test("field of in exists", () => {
       const cs = [where("population", "in", [1000, 2000] as const)] as const;
       type T = CD<City, typeof cs>;
-      type _ = Assert<Match<{ population: 1000 | 2000 }, T>>;
+      type _ = Assert<Extends<T, { population: 1000 | 2000 }>>;
     });
 
     test("field of not-in exists", () => {
@@ -64,20 +64,20 @@ describe("ConstraintedData", () => {
         where("population", "not-in", [1000, 2000] as const),
       ] as const;
       type T = CD<City, typeof cs>;
-      type _ = Assert<Match<{ population: number }, T>>;
+      type _ = Assert<Extends<T, { population: number }>>;
     });
 
     test("name != string is not never", () => {
       const cs = [where("name", "!=", "tokyo")] as const;
       type T = CD<City, typeof cs>;
-      type _ = Assert<Match<{ name: string }, T>>;
+      type _ = Assert<Extends<T, { name: string }>>;
       expect(() => fst.getDocs(query(cities, ...cs))).not.toThrow();
     });
 
     test("name not-in string[] is not never", () => {
       const cs = [where("name", "not-in", ["tokyo"])] as const;
       type T = CD<City, typeof cs>;
-      type _ = Assert<Match<{ name: string }, T>>;
+      type _ = Assert<Extends<T, { name: string }>>;
       expect(() => fst.getDocs(query(cities, ...cs))).not.toThrow();
     });
 
@@ -131,7 +131,7 @@ describe("ConstraintedData", () => {
         where("population", "==", 1000 as const),
       ] as const;
       type T = CD<City, typeof cs>;
-      type _ = Assert<Match<{ population: 1000; capital: true }, T>>;
+      type _ = Assert<Extends<T, { population: 1000; capital: true }>>;
       expect(() => query(cities, ...cs)).not.toThrow();
     });
 
@@ -141,7 +141,7 @@ describe("ConstraintedData", () => {
         where("capital", "==", true),
       ] as const;
       type T = CD<City, typeof cs>;
-      type _ = Assert<Match<{ population: number; capital: boolean }, T>>;
+      type _ = Assert<Extends<T, { population: number; capital: boolean }>>;
       expect(() => fst.getDocs(query(cities, ...cs))).not.toThrow();
     });
 
@@ -151,7 +151,7 @@ describe("ConstraintedData", () => {
         where("population", "<", 2000),
       ] as const;
       type T = CD<City, typeof cs>;
-      type _ = Assert<Match<{ population: number }, T>>;
+      type _ = Assert<Extends<T, { population: number }>>;
       expect(() => fst.getDocs(query(cities, ...cs))).not.toThrow();
     });
 
@@ -198,7 +198,7 @@ describe("ConstraintedData", () => {
       ] as const;
 
       type T = CD<City, typeof cs>;
-      type _ = Assert<Match<{ capital: true }, T>>;
+      type _ = Assert<Extends<T, { capital: true }>>;
     });
 
     test("population > 123 & orderBy(population) is OK", () => {
@@ -207,7 +207,7 @@ describe("ConstraintedData", () => {
         orderBy("population"),
       ] as const;
       type T = CD<City, typeof cs>;
-      type _ = Assert<Match<{ population: number }, T>>;
+      type _ = Assert<Extends<T, { population: number }>>;
     });
 
     test("population > 123 & orderBy(name) is NG", () => {
@@ -225,7 +225,7 @@ describe("ConstraintedData", () => {
       ] as const;
 
       type T = CD<City, typeof cs>;
-      type _ = Assert<Match<{ name: string }, T>>;
+      type _ = Assert<Extends<T, { name: string }>>;
     });
 
     test("population > number & name not-in string[] is never", () => {
@@ -276,7 +276,7 @@ describe(`query with where`, () => {
     const c = where("country", "in", ["USA", "Japan"] as const);
     const q = query(cities, c);
     type D = typeof q extends fst.Query<infer T> ? T : never;
-    type _ = Assert<Match<{ country: "USA" | "Japan" }, D>>;
+    type _ = Assert<Extends<D, { country: "USA" | "Japan" }>>;
     const querySS = await fst.getDocs(q);
     querySS.forEach((ss) => {
       expect(["USA", "Japan"]).toContain(ss.data().country);
@@ -298,7 +298,7 @@ describe(`query with where`, () => {
       where("regions", "array-contains-any", ["west_coast", "east_coast"])
     );
     type D = typeof q extends fst.Query<infer T> ? T : never;
-    type _ = Assert<Match<{ regions: string[] }, D>>;
+    type _ = Assert<Extends<D, { regions: string[] }>>;
     const querySS = await fst.getDocs(q);
     querySS.forEach((ss) => {
       const regions = ss.data().regions;
