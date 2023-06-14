@@ -19,8 +19,6 @@ export interface DocumentData {
   readonly [K: string]: FieldType;
 }
 
-export type StrKeyof<T> = keyof T & string;
-
 export interface Schema {
   [CollectionKey: string]: {
     [DocuemntKey: string]: {
@@ -29,12 +27,6 @@ export interface Schema {
     };
   };
 }
-
-export type ExcUndef<T> = Exclude<T, undefined>;
-
-export type Defined<T extends DocumentData, K extends StrKeyof<T>> = T & {
-  [L in K]-?: ExcUndef<T[K]>;
-};
 
 // @ts-expect-error judged as too deep
 export interface FuseFirestore<S extends Schema> extends fst.Firestore {

@@ -1,4 +1,5 @@
-import { ExcUndef, Schema, StrKeyof } from "./index.js";
+import { Schema } from "./index.js";
+import { ExcUndef, StrKeyof } from "./utils.js";
 
 export type DocumentPaths<S extends Schema> = StrKeyof<S> extends infer ColKey
   ? ColKey extends StrKeyof<S>

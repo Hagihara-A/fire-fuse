@@ -1,6 +1,7 @@
 import { FieldPath, Precondition, WriteResult } from "@google-cloud/firestore";
 
-import { DocumentData, ExcUndef, StrKeyof } from "./index.js";
+import { DocumentData } from "./index.js";
+import { ExcUndef, StrKeyof } from "./utils.js";
 
 export type UpdateData<T extends DocumentData> = {
   [P in UpdatePaths<T>]?: UpdateValue<T, P>;

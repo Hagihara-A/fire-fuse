@@ -1,13 +1,8 @@
 import { CollectionReference } from "@google-cloud/firestore";
 
-import {
-  DocumentData,
-  ExcUndef,
-  FuseQuery,
-  Schema,
-  StrKeyof,
-} from "./index.js";
+import { DocumentData, FuseQuery, Schema } from "./index.js";
 import { FuseDocumentReference } from "./reference.js";
+import { ExcUndef, StrKeyof } from "./utils.js";
 
 export type CollectionPaths<S extends Schema> = StrKeyof<S> extends infer ColKey
   ? ColKey extends StrKeyof<S>
