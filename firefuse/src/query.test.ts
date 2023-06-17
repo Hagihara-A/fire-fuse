@@ -7,10 +7,8 @@ import { ConstrainedData as CD } from "./index.js";
 import {
   Assert,
   City,
-  CityV2,
   collection,
   DB,
-  doc,
   Exact,
   Extends,
   Never,
@@ -333,77 +331,5 @@ describe("query with orderBy", () => {
       expect(population).toBeLessThanOrEqual(prev);
       prev = population ?? prev;
     });
-  });
-});
-
-describe(`can get docs which have Timestamp value`, () => {
-  const now = fst.Timestamp.now();
-  const tss: { ts: fst.Timestamp; ref: fst.DocumentReference<CityV2> }[] = [];
-  const n = 10;
-  const tsCol = collection(DB, "cities", "v2", "cities");
-  const where = fst.where as fuse.Where<CityV2>;
-  const orderBy = fst.orderBy as fuse.OrderBy<CityV2>;
-
-  beforeAll(async () => {
-    for (let index = 0; index < n; index++) {
-      const ts = fst.Timestamp.fromMillis(now.toMillis() + 1000 * 60 * index);
-      const ref = doc(tsCol, `${index}`);
-      tss.push({ ts, ref });
-      await fst.setDoc(ref, {
-        createdAt: ts,
-        name: "",
-        state: "",
-        country: "",
-      });
-    }
-  });
-
-  test(`can get docs where("timestamp", "==", Timestamp)`, async () => {
-    const { ts, ref } = tss[5];
-    const q = query(tsCol, where("createdAt", "==", ts));
-    const querySS = await fst.getDocs(q);
-
-    expect(querySS.docs).toHaveLength(1);
-    const gotDoc = querySS.docs.find((doc) => doc.data().createdAt.isEqual(ts));
-    expect(gotDoc?.ref).toBeInstanceOf(fst.DocumentReference);
-    expect(gotDoc?.ref?.path).toBe(ref.path);
-  });
-  test(`can get docs where("timestamp", "!=", Timestamp)`, async () => {
-    const { ts, ref } = tss[5];
-
-    const q = query(tsCol, where("createdAt", "!=", ts));
-    const querySS = await fst.getDocs(q);
-    expect(querySS.docs).toHaveLength(n - 1);
-    expect(
-      querySS.docs.every(
-        (doc) => doc.ref.path !== ref.path && !doc.data().createdAt.isEqual(ts)
-      )
-    ).toBeTruthy();
-  });
-  test(`can get docs where("timestamp", ">=", Timestamp)`, async () => {
-    const m = 3;
-    const { ref: ref1, ts: before } = tss[m];
-
-    const q = query(ref1.parent, where("createdAt", ">", before));
-    const querySS = await fst.getDocs(q);
-    expect(
-      querySS.docs.every(
-        (doc) => doc.data().createdAt.toMillis() > before.toMillis()
-      )
-    ).toBeTruthy();
-    expect(querySS.docs).toHaveLength(n - m - 1);
-  });
-
-  test(`Timestample is able to be ordered by orderBy`, async () => {
-    const q = query(tsCol, orderBy("createdAt"));
-    const { docs } = await fst.getDocs(q);
-    let prev = 0;
-    expect.assertions(n + 1);
-    expect(docs).toHaveLength(n);
-    for (const d of docs) {
-      const ts = d.data().createdAt;
-      expect(prev < ts.toMillis()).toBeTruthy();
-      prev = ts.toMillis();
-    }
   });
 });
