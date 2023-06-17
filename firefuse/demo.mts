@@ -142,5 +142,22 @@ const generalUser = collection(DB, "user", "general", "users");
     userOrderBy("name")
   );
 }
-// use other constraints
-const { limit, limitToLast, startAt, startAfter, endAt, endBefore } = fuse;
+
+// Other constraints
+import {
+  endAt,
+  endBefore,
+  limit,
+  limitToLast,
+  startAfter,
+  startAt,
+} from "firebase/firestore";
+query(
+  generalUser,
+  endAt(1),
+  endBefore(1),
+  limit(1),
+  limitToLast(1),
+  startAfter(1),
+  startAt(1)
+);
