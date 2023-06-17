@@ -325,29 +325,29 @@ describe("use startAt with fuse.query", () => {
 });
 
 describe("use startAfter with fuse.query", () => {
-  const c = collection(DB, "user");
+  const c = collection(DB, "cities", "v1", "cities");
   const orderBy = fst.orderBy as fuse.OrderBy<City>;
   expect(() => query(c, orderBy("name"), fst.startAfter(1))).not.toThrow();
 });
 
 describe("use limit with fuse.query", () => {
-  const c = collection(DB, "user");
+  const c = collection(DB, "cities", "v1", "cities");
   expect(() => query(c, fst.limit(1))).not.toThrow();
 });
 
 describe("use limitToLast with fuse.query", () => {
-  const c = collection(DB, "user");
+  const c = collection(DB, "cities", "v1", "cities");
   expect(() => query(c, fst.limitToLast(1))).not.toThrow();
 });
 
 describe("use endAt with fuse.query", () => {
-  const c = collection(DB, "user");
+  const c = collection(DB, "cities", "v1", "cities");
   const orderBy = fst.orderBy as fuse.OrderBy<City>;
   expect(() => query(c, orderBy("name"), fst.endAt(1))).not.toThrow();
 });
 
 describe("use endBefore with fuse.query", () => {
-  const c = collection(DB, "user");
+  const c = collection(DB, "cities", "v1", "cities");
   const orderBy = fst.orderBy as fuse.OrderBy<City>;
   expect(() => query(c, orderBy("name"), fst.endBefore(1))).not.toThrow();
 });
