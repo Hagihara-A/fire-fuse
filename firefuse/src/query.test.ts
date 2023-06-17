@@ -183,22 +183,6 @@ describe("ConstraintedData", () => {
       expect(() => query(cities, ...cs)).toThrow();
     });
 
-    test("not-in & in & >= & == && orderBy && ...otherConstraints is valid", () => {
-      const cs = [
-        where("capital", "==", true as const),
-        orderBy("state"),
-        fuse.limit(3),
-        fuse.limitToLast(2),
-        fuse.startAt(1000),
-        fuse.startAfter(10000),
-        fuse.endAt(100000),
-        fuse.endBefore(1000000),
-      ] as const;
-
-      type T = CD<City, typeof cs>;
-      type _ = Assert<Extends<T, { capital: true }>>;
-    });
-
     test("population > 123 & orderBy(population) is OK", () => {
       const cs = [
         where("population", ">", 123),
@@ -332,4 +316,38 @@ describe("query with orderBy", () => {
       prev = population ?? prev;
     });
   });
+});
+
+describe("use startAt with fuse.query", () => {
+  const c = collection(DB, "cities", "v1", "cities");
+  const orderBy = fst.orderBy as fuse.OrderBy<City>;
+  expect(() => query(c, orderBy("capital"), fst.startAt(1))).not.toThrow();
+});
+
+describe("use startAfter with fuse.query", () => {
+  const c = collection(DB, "user");
+  const orderBy = fst.orderBy as fuse.OrderBy<City>;
+  expect(() => query(c, orderBy("name"), fst.startAfter(1))).not.toThrow();
+});
+
+describe("use limit with fuse.query", () => {
+  const c = collection(DB, "user");
+  expect(() => query(c, fst.limit(1))).not.toThrow();
+});
+
+describe("use limitToLast with fuse.query", () => {
+  const c = collection(DB, "user");
+  expect(() => query(c, fst.limitToLast(1))).not.toThrow();
+});
+
+describe("use endAt with fuse.query", () => {
+  const c = collection(DB, "user");
+  const orderBy = fst.orderBy as fuse.OrderBy<City>;
+  expect(() => query(c, orderBy("name"), fst.endAt(1))).not.toThrow();
+});
+
+describe("use endBefore with fuse.query", () => {
+  const c = collection(DB, "user");
+  const orderBy = fst.orderBy as fuse.OrderBy<City>;
+  expect(() => query(c, orderBy("name"), fst.endBefore(1))).not.toThrow();
 });
