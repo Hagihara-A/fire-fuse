@@ -1,7 +1,7 @@
 import * as fst from "firebase/firestore";
 
 import { OrderByConstraint } from "./constraint/orderby.js";
-import { OtherConstraints } from "./constraint/other.js";
+import { OtherConstraint } from "./constraint/other.js";
 import { QueryConstraint } from "./constraint/QueryConstraint.js";
 import { GreaterOrLesserOp, WhereConstraint } from "./constraint/where.js";
 import { Defined, ExcUndef, StrKeyof } from "./utils.js";
@@ -125,7 +125,7 @@ export type ConstrainedData<
             OverWrite<Mem, { prevOrderBy: true }>
           >
         : never
-      : H extends OtherConstraints
+      : H extends OtherConstraint
       ? ConstrainedData<T, Rest, Mem>
       : never
     : never

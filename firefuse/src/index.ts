@@ -25,7 +25,6 @@ export interface Schema {
 
 export * from "./collection.js";
 export * from "./constraint/orderby.js";
-export * from "./constraint/other.js";
 export * from "./constraint/QueryConstraint.js";
 export * from "./constraint/where.js";
 export * from "./doc.js";
