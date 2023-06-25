@@ -28,7 +28,6 @@ export interface Schema {
   };
 }
 
-// @ts-expect-error judged as too deep
 export interface FuseFirestore<S extends Schema> extends fst.Firestore {
   doc<P extends DocumentPaths<S>>(
     documentPath: P
