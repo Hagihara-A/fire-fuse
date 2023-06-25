@@ -96,15 +96,15 @@ users.orderBy(
 
 {
   // Return value of query() is typed depending on your contraints.
-const q = users.where("age", ">", 20); // ✅
-const { docs } = await q.get();
-const age: number = docs[0].data().age; // ✅ Now, age is `number`. Not `number | undefined.`
+  const q = users.where("age", ">", 20); // ✅
+  const { docs } = await q.get();
+  const age: number = docs[0].data().age; // ✅ Now, age is `number`. Not `number | undefined.`
 }
 {
   // `as const` narrows type
-const q = users.where("name", "==", "arark" as const);
-const { docs } = await q.get();
-docs[0].data().name === "arark"; // ✅  name is "arark". Not `string`.
+  const q = users.where("name", "==", "arark" as const);
+  const { docs } = await q.get();
+  docs[0].data().name === "arark"; // ✅  name is "arark". Not `string`.
 }
 // query() detects all illegal constraints.
 {
