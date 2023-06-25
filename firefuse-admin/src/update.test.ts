@@ -1,4 +1,4 @@
-import { Assert, Extends, Match, Room } from "./index.test";
+import { Assert, Extends, Room } from "./index.test";
 import { UpdateData, UpdatePaths } from "./update.js";
 
 describe(`UpdatePaths`, () => {
@@ -15,13 +15,13 @@ describe("update", () => {
   describe("UpdateData", () => {
     test(`UpdateData<City> contains { "rooms.living": number }`, () => {
       type D = UpdateData<Room>;
-      type _ = Assert<Match<{ "rooms.living"?: number }, D>>;
+      type _ = Assert<Extends<{ "rooms.living"?: number }, D>>;
     });
 
     test(`UpdateData<City> contains { rooms : {...} }`, () => {
       type D = UpdateData<Room>;
       type _ = Assert<
-        Match<
+        Extends<
           { rooms?: { living: number; dining: number; kitchen: number } },
           D
         >
