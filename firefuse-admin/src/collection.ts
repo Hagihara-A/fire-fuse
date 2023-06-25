@@ -19,7 +19,8 @@ export type CollectionPaths<S extends Schema> = StrKeyof<S> extends infer ColKey
   : never;
 
 type Base<T extends DocumentData> = FuseQuery<T> &
-  Omit<CollectionReference<T>, "where">;
+  Omit<CollectionReference<T>, "where" | "orderBy">;
+
 export interface FuseCollectionReference<T extends DocumentData>
   extends Base<T> {
   doc(id?: string): FuseDocumentReference<T>;

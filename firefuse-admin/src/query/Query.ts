@@ -1,16 +1,14 @@
-import { Query } from "@google-cloud/firestore";
+import { OrderByDirection, Query } from "@google-cloud/firestore";
 
 import { DocumentData } from "../index.js";
-import { StrKeyof } from "../utils.js";
+import { Defined, StrKeyof } from "../utils.js";
 import { LegalOperation, LegalValue, WhereData } from "./where.js";
-// import { OrderByDirection } from "@google-cloud/firestore";
-// import { Defined } from "../index.js";
 
 export interface FuseQuery<T extends DocumentData> extends Query<T> {
-  // orderBy<F extends StrKeyof<T>>(
-  //   fieldPath: F,
-  //   directionStr: OrderByDirection
-  // ): FuseQuery<Defined<T, F>>;
+  orderBy<F extends StrKeyof<T>>(
+    fieldPath: F,
+    directionStr?: OrderByDirection
+  ): FuseQuery<Defined<T, F>>;
 
   where<
     F extends StrKeyof<T>,
